@@ -5,6 +5,6 @@
 #include <Rcpp.h>
 
 // Functions Contained Within File initial_state_sample.cpp
-Rcpp::NumericVector initial_state_sample(Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters);
+std::vector <int> initial_state_sample(Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, double initial_K);
 
 #endif

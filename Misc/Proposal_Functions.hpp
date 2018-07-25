@@ -11,6 +11,8 @@ double proposal_function(double sd, double current_parameter_value);
 double proposal_SD_adapter(double current_sd, double acceptance_ratio, double current_acceptance_ratio, double max_sd);
 double proposal_SD_adapter_mark_two(double current_sd, double current_acceptance_ratio, double max_sd, double cooling_factor,
                                     double current_iteration, double iteration_cooling_began);
+double proposal_SD_adapter_mark_three(double accepted_variable, double current_iteration, double iteration_cooling_began,
+                                      double current_sd);
 
 
 

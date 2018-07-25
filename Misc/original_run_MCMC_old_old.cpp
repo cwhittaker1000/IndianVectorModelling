@@ -1,15 +1,16 @@
 #include "MCMC_Functions.hpp"
 #include "Proposal_Functions.hpp"
 
+//' @export
 // [[Rcpp::export]]
-Rcpp::List runMCMC(int start_sd_adaptation, // Time to start SD adaptation - relates to SD adaptation
+Rcpp::List old_runMCMC(int start_sd_adaptation, // Time to start SD adaptation - relates to SD adaptation
                    int end_sd_adaptation,
                    std::vector <double> max_sd, // Maximum SD allowed for parameter - relates to SD adaptation
                    std::vector <double> acceptance_ratio, // Desired acceptance ratio - relates to SD adaptation
                    std::vector<double> sd_proposals, // SD for proposal function
                    int number_of_iterations, // Number of MCMC iterations
                    Rcpp::StringVector parameters_to_be_fitted, // String of parameters (their names) to be fitted
-                   Rcpp::NumericVector fitted_parameters, // Initial parameter values for values that are going to be fitted
+                   Rcpp::NumericVector model_parameters, // Initial parameter values for values that are going to be fitted
                    Rcpp::NumericVector static_parameters, // Values for static parameter values
                    int N, // Number of particles - relates to Particle Filter/Model
                    std::vector <double> rainfall, // Rainfall recorded - relates to Particle Filter/Model
@@ -17,7 +18,8 @@ Rcpp::List runMCMC(int start_sd_adaptation, // Time to start SD adaptation - rel
                    int number_of_datapoints, // Number of datapoints -  relates to Particle Filter/Model
                    int data_timeframe, // Time between datapoints - relates to Particle Filter/Model
                    Rcpp::String density_function, // Which density function regulating mortality - relates to Particle Filter/Model
-                   Rcpp::String prior_choice) {
+                   Rcpp::String prior_choice,
+                   Rcpp::LogicalVector fitted_yn) {
 
   // Storage for the MCMC chains
   Rcpp::NumericMatrix MCMC_chain_output(number_of_iterations + 1, parameters_to_be_fitted.size());
@@ -32,7 +34,7 @@ Rcpp::List runMCMC(int start_sd_adaptation, // Time to start SD adaptation - rel
   // Assigning initial values to the first row of the MCMC output
   for (int d = 0; d < parameters_to_be_fitted.size(); d++) {
     Rcpp::String name_parameter_to_be_added = parameters_to_be_fitted[d];
-    MCMC_chain_output(0, d) = fitted_parameters[name_parameter_to_be_added];
+    MCMC_chain_output(0, d) = model_parameters[name_parameter_to_be_added];
   }
 
   // Calculating the posterior likelihood for the initial parameter values
@@ -40,38 +42,36 @@ Rcpp::List runMCMC(int start_sd_adaptation, // Time to start SD adaptation - rel
   // current parameters, then calculates the posterior. By using parameter_values[0] as my "new" parameter,
   // allows me to calculate the posterior for my initial parameter values.
   double current_posterior_likelihood = posterior(N, rainfall, obsData, number_of_datapoints,
-                                                  data_timeframe, fitted_parameters, static_parameters, density_function,
-                                                  fitted_parameters[0], parameters_to_be_fitted[0], prior_choice); // whole bunch of inputs here, see if I can streamline this
+                                                  data_timeframe, model_parameters, static_parameters, density_function,
+                                                  model_parameters[0], 0, prior_choice, fitted_yn); // whole bunch of inputs here, see if I can streamline this
 
-  // Initialising variables required for the standard deviation tunning
+  // Initialising variables required for the standard deviation tuning
   std::vector <double> acceptances(parameters_to_be_fitted.size(), 0); // double check this generates a vector with the right dimensions and contents
   std::vector <double> rejections(parameters_to_be_fitted.size(), 0); // double check this generates a vector with the right dimensions and contents
+
+  // Creating a vector to store and sequentially update model parameters as the MCMC iterates
+  Rcpp::NumericVector model_parameters_for_MCMC = Rcpp::NumericVector::create(Rcpp::Named("dE") = model_parameters[0], Rcpp::Named("dL") = model_parameters[1],
+                                                                              Rcpp::Named("dP") = model_parameters[2], Rcpp::Named("muE0") = model_parameters[3],
+                                                                              Rcpp::Named("muL0") = model_parameters[4], Rcpp::Named("muP") = model_parameters[5],
+                                                                              Rcpp::Named("muM") = model_parameters[6], Rcpp::Named("lambda") = model_parameters[7],
+                                                                              Rcpp::Named("tau") = model_parameters[8], Rcpp::Named("beta") = model_parameters[9],
+                                                                              Rcpp::Named("overdisp") = model_parameters[10], Rcpp::Named("pop_frac") = model_parameters[11],
+                                                                              Rcpp::Named("E") = 0.0, Rcpp::Named("L") = 0.0,
+                                                                              Rcpp::Named("P") = 0.0, Rcpp::Named("M") = 0.0);
 
   // Iterating over each parameter for a specified number of iterations
   for (int i = 0; i < number_of_iterations; i++) {
 
-    for (int j = 0; j < parameters_to_be_fitted.size(); j++) {
+    for (int j = 0; j < parameters_to_be_fitted.size(); j++) { // NOTE: MEANS THAT THE ORDER MATTERS CURRENTLY RE FLEXIBILITY IN TERMS OF WHICH PARAMETERS ARE FITTED
 
       // Creating a vector of fitted parameter values to pass into the posterior function
-      Rcpp::NumericVector parameters_for_fitting(16);
-      for (int k = 0; k < parameters_for_fitting.size(); k++) {
-        if (k < 12) {
-          parameters_for_fitting[k] = MCMC_chain_output(i, k);
-        }
-        else if (k == 12) {
-          parameters_for_fitting[k] = 0; //E
-        }
-        else if (k == 13) {
-          parameters_for_fitting[k] = 0; //L
-        }
-        else if (k == 14) {
-          parameters_for_fitting[k] = 0; //P
-        }
-        else if (k == 15) {
-          parameters_for_fitting[k] = 0; //M
-        }
+      // Changes the model parameters in the vector to their current values in the chain, whilst leaving static model parameters unchanged
+      // Note again that I can turn off parameters, but only in sequence right to left (can't turn off specific ones in middle of vector currently)
+      for (int k = 0; k < parameters_to_be_fitted.size(); k++) {
+        model_parameters_for_MCMC[k] = MCMC_chain_output(i, k);
       }
-      parameters_for_fitting.names() = Rcpp::StringVector::create("dE", "dL", "dP", "muE0", "muL0", "muP", "muM", "lambda", "tau", "beta", "overdisp", "pop_frac", "E", "L", "P", "M");
+
+      model_parameters_for_MCMC.names() = Rcpp::StringVector::create("dE", "dL", "dP", "muE0", "muL0", "muP", "muM", "lambda", "tau", "beta", "overdisp", "pop_frac", "E", "L", "P", "M");
 
       // Generating the proposed parameter value
       double current_parameter_value = MCMC_chain_output(i, j);
@@ -79,8 +79,8 @@ Rcpp::List runMCMC(int start_sd_adaptation, // Time to start SD adaptation - rel
 
       // Assessing the likelihood of the proposed parameter value compared to the current parameter value
       double proposed_posterior_likelihood = posterior(N, rainfall, obsData, number_of_datapoints,
-                                                       data_timeframe, parameters_for_fitting, static_parameters, density_function,
-                                                       proposed_parameter_value, parameters_to_be_fitted[j], prior_choice);
+                                                       data_timeframe, model_parameters_for_MCMC, static_parameters, density_function,
+                                                       proposed_parameter_value, j, prior_choice, fitted_yn);
 
       double likelihood_ratio = exp(proposed_posterior_likelihood - current_posterior_likelihood);
 

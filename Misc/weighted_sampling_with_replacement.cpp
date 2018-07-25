@@ -9,6 +9,7 @@ int rbinomial1(int trials, double p) {
   return(R::rbinom(trials,p));
 }
 
+//' @export
 // [[Rcpp::export]]
 std::vector<int> weighted_sampling(int n, std::vector<double> prob, double p_tot, int K)
 {

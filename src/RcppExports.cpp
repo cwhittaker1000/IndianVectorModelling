@@ -6,45 +6,16 @@
 
 using namespace Rcpp;
 
-// full_output_particle_filter
-Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String density_function);
-RcppExport SEXP _IndianVectorModelling_full_output_particle_filter(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP density_functionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
-    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
-    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
-    rcpp_result_gen = Rcpp::wrap(full_output_particle_filter(N, rainfall, obsData, number_of_datapoints, data_timeframe, fitted_parameters, static_parameters, density_function));
-    return rcpp_result_gen;
-END_RCPP
-}
-// initial_state_sample
-Rcpp::NumericVector initial_state_sample(Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters);
-RcppExport SEXP _IndianVectorModelling_initial_state_sample(SEXP fitted_parametersSEXP, SEXP static_parametersSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    rcpp_result_gen = Rcpp::wrap(initial_state_sample(fitted_parameters, static_parameters));
-    return rcpp_result_gen;
-END_RCPP
-}
-// prior
-double prior(Rcpp::NumericVector parameter_values, Rcpp::String prior_choice);
-RcppExport SEXP _IndianVectorModelling_prior(SEXP parameter_valuesSEXP, SEXP prior_choiceSEXP) {
+// prior_seq_proposals
+double prior_seq_proposals(Rcpp::NumericVector parameter_values, Rcpp::String prior_choice, Rcpp::LogicalVector fitted_yn);
+RcppExport SEXP _IndianVectorModelling_prior_seq_proposals(SEXP parameter_valuesSEXP, SEXP prior_choiceSEXP, SEXP fitted_ynSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type parameter_values(parameter_valuesSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(prior(parameter_values, prior_choice));
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    rcpp_result_gen = Rcpp::wrap(prior_seq_proposals(parameter_values, prior_choice, fitted_yn));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,9 +37,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// posterior
-double posterior(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String density_function, double parameter_value, Rcpp::String parameter_index, Rcpp::String prior_choice);
-RcppExport SEXP _IndianVectorModelling_posterior(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP density_functionSEXP, SEXP parameter_valueSEXP, SEXP parameter_indexSEXP, SEXP prior_choiceSEXP) {
+// posterior_seq_proposals
+double posterior_seq_proposals(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String density_function, double parameter_value, int parameter_index, Rcpp::String prior_choice, Rcpp::LogicalVector fitted_yn);
+RcppExport SEXP _IndianVectorModelling_posterior_seq_proposals(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP density_functionSEXP, SEXP parameter_valueSEXP, SEXP parameter_indexSEXP, SEXP prior_choiceSEXP, SEXP fitted_ynSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -81,9 +52,113 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
     Rcpp::traits::input_parameter< double >::type parameter_value(parameter_valueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type parameter_index(parameter_indexSEXP);
+    Rcpp::traits::input_parameter< int >::type parameter_index(parameter_indexSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior(N, rainfall, obsData, number_of_datapoints, data_timeframe, fitted_parameters, static_parameters, density_function, parameter_value, parameter_index, prior_choice));
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    rcpp_result_gen = Rcpp::wrap(posterior_seq_proposals(N, rainfall, obsData, number_of_datapoints, data_timeframe, fitted_parameters, static_parameters, density_function, parameter_value, parameter_index, prior_choice, fitted_yn));
+    return rcpp_result_gen;
+END_RCPP
+}
+// seq_proposal_function
+double seq_proposal_function(double sd, double current_parameter_value);
+RcppExport SEXP _IndianVectorModelling_seq_proposal_function(SEXP sdSEXP, SEXP current_parameter_valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
+    Rcpp::traits::input_parameter< double >::type current_parameter_value(current_parameter_valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(seq_proposal_function(sd, current_parameter_value));
+    return rcpp_result_gen;
+END_RCPP
+}
+// seq_proposal_SD_adapter
+double seq_proposal_SD_adapter(double accepted_variable, double current_iteration, double iteration_cooling_began, double current_sd);
+RcppExport SEXP _IndianVectorModelling_seq_proposal_SD_adapter(SEXP accepted_variableSEXP, SEXP current_iterationSEXP, SEXP iteration_cooling_beganSEXP, SEXP current_sdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type accepted_variable(accepted_variableSEXP);
+    Rcpp::traits::input_parameter< double >::type current_iteration(current_iterationSEXP);
+    Rcpp::traits::input_parameter< double >::type iteration_cooling_began(iteration_cooling_beganSEXP);
+    Rcpp::traits::input_parameter< double >::type current_sd(current_sdSEXP);
+    rcpp_result_gen = Rcpp::wrap(seq_proposal_SD_adapter(accepted_variable, current_iteration, iteration_cooling_began, current_sd));
+    return rcpp_result_gen;
+END_RCPP
+}
+// joint_proposal_function
+double joint_proposal_function(double sd, double current_parameter_value);
+RcppExport SEXP _IndianVectorModelling_joint_proposal_function(SEXP sdSEXP, SEXP current_parameter_valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
+    Rcpp::traits::input_parameter< double >::type current_parameter_value(current_parameter_valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(joint_proposal_function(sd, current_parameter_value));
+    return rcpp_result_gen;
+END_RCPP
+}
+// joint_proposal_SD_adapter
+Rcpp::List joint_proposal_SD_adapter(double accepted_variable, double current_iteration, double iteration_cooling_began, double current_scaling_factor, arma::mat mu_previous, arma::mat current_parameter_values, arma::mat current_covariance_matrix);
+RcppExport SEXP _IndianVectorModelling_joint_proposal_SD_adapter(SEXP accepted_variableSEXP, SEXP current_iterationSEXP, SEXP iteration_cooling_beganSEXP, SEXP current_scaling_factorSEXP, SEXP mu_previousSEXP, SEXP current_parameter_valuesSEXP, SEXP current_covariance_matrixSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type accepted_variable(accepted_variableSEXP);
+    Rcpp::traits::input_parameter< double >::type current_iteration(current_iterationSEXP);
+    Rcpp::traits::input_parameter< double >::type iteration_cooling_began(iteration_cooling_beganSEXP);
+    Rcpp::traits::input_parameter< double >::type current_scaling_factor(current_scaling_factorSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mu_previous(mu_previousSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type current_parameter_values(current_parameter_valuesSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type current_covariance_matrix(current_covariance_matrixSEXP);
+    rcpp_result_gen = Rcpp::wrap(joint_proposal_SD_adapter(accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix));
+    return rcpp_result_gen;
+END_RCPP
+}
+// posterior_joint_proposals
+double posterior_joint_proposals(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String density_function, Rcpp::String prior_choice, Rcpp::LogicalVector fitted_yn);
+RcppExport SEXP _IndianVectorModelling_posterior_joint_proposals(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP density_functionSEXP, SEXP prior_choiceSEXP, SEXP fitted_ynSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
+    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    rcpp_result_gen = Rcpp::wrap(posterior_joint_proposals(N, rainfall, obsData, number_of_datapoints, data_timeframe, fitted_parameters, static_parameters, density_function, prior_choice, fitted_yn));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mosquito_population_model
+Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function);
+RcppExport SEXP _IndianVectorModelling_mosquito_population_model(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
+    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
+    rcpp_result_gen = Rcpp::wrap(mosquito_population_model(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mvrnormArma
+arma::mat mvrnormArma(arma::mat mu, arma::mat sigma);
+RcppExport SEXP _IndianVectorModelling_mvrnormArma(SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvrnormArma(mu, sigma));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -105,19 +180,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// mosquito_population_model
-Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String density_function);
-RcppExport SEXP _IndianVectorModelling_mosquito_population_model(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP density_functionSEXP) {
+// full_output_particle_filter
+Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String density_function);
+RcppExport SEXP _IndianVectorModelling_full_output_particle_filter(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP density_functionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
-    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
+    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
-    rcpp_result_gen = Rcpp::wrap(mosquito_population_model(start_time, end, fitted_parameters, static_parameters, rainfall, density_function));
+    rcpp_result_gen = Rcpp::wrap(full_output_particle_filter(N, rainfall, obsData, number_of_datapoints, data_timeframe, fitted_parameters, static_parameters, density_function));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -146,103 +223,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// proposal_function
-double proposal_function(double sd, double current_parameter_value);
-RcppExport SEXP _IndianVectorModelling_proposal_function(SEXP sdSEXP, SEXP current_parameter_valueSEXP) {
+// initial_state_sample
+std::vector <int> initial_state_sample(Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, double initial_K);
+RcppExport SEXP _IndianVectorModelling_initial_state_sample(SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP initial_KSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
-    Rcpp::traits::input_parameter< double >::type current_parameter_value(current_parameter_valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(proposal_function(sd, current_parameter_value));
-    return rcpp_result_gen;
-END_RCPP
-}
-// proposal_SD_adapter
-double proposal_SD_adapter(double current_sd, double acceptance_ratio, double current_acceptance_ratio, double max_sd);
-RcppExport SEXP _IndianVectorModelling_proposal_SD_adapter(SEXP current_sdSEXP, SEXP acceptance_ratioSEXP, SEXP current_acceptance_ratioSEXP, SEXP max_sdSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type current_sd(current_sdSEXP);
-    Rcpp::traits::input_parameter< double >::type acceptance_ratio(acceptance_ratioSEXP);
-    Rcpp::traits::input_parameter< double >::type current_acceptance_ratio(current_acceptance_ratioSEXP);
-    Rcpp::traits::input_parameter< double >::type max_sd(max_sdSEXP);
-    rcpp_result_gen = Rcpp::wrap(proposal_SD_adapter(current_sd, acceptance_ratio, current_acceptance_ratio, max_sd));
-    return rcpp_result_gen;
-END_RCPP
-}
-// proposal_SD_adapter_mark_two
-double proposal_SD_adapter_mark_two(double current_sd, double current_acceptance_ratio, double max_sd, double cooling_factor, double current_iteration, double iteration_cooling_began);
-RcppExport SEXP _IndianVectorModelling_proposal_SD_adapter_mark_two(SEXP current_sdSEXP, SEXP current_acceptance_ratioSEXP, SEXP max_sdSEXP, SEXP cooling_factorSEXP, SEXP current_iterationSEXP, SEXP iteration_cooling_beganSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type current_sd(current_sdSEXP);
-    Rcpp::traits::input_parameter< double >::type current_acceptance_ratio(current_acceptance_ratioSEXP);
-    Rcpp::traits::input_parameter< double >::type max_sd(max_sdSEXP);
-    Rcpp::traits::input_parameter< double >::type cooling_factor(cooling_factorSEXP);
-    Rcpp::traits::input_parameter< double >::type current_iteration(current_iterationSEXP);
-    Rcpp::traits::input_parameter< double >::type iteration_cooling_began(iteration_cooling_beganSEXP);
-    rcpp_result_gen = Rcpp::wrap(proposal_SD_adapter_mark_two(current_sd, current_acceptance_ratio, max_sd, cooling_factor, current_iteration, iteration_cooling_began));
-    return rcpp_result_gen;
-END_RCPP
-}
-// runMCMC
-Rcpp::List runMCMC(int start_sd_adaptation, int end_sd_adaptation, std::vector <double> max_sd, std::vector <double> acceptance_ratio, std::vector<double> sd_proposals, int number_of_iterations, Rcpp::StringVector parameters_to_be_fitted, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::String density_function, Rcpp::String prior_choice);
-RcppExport SEXP _IndianVectorModelling_runMCMC(SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP max_sdSEXP, SEXP acceptance_ratioSEXP, SEXP sd_proposalsSEXP, SEXP number_of_iterationsSEXP, SEXP parameters_to_be_fittedSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP density_functionSEXP, SEXP prior_choiceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_sd_adaptation(start_sd_adaptationSEXP);
-    Rcpp::traits::input_parameter< int >::type end_sd_adaptation(end_sd_adaptationSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type max_sd(max_sdSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type acceptance_ratio(acceptance_ratioSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type sd_proposals(sd_proposalsSEXP);
-    Rcpp::traits::input_parameter< int >::type number_of_iterations(number_of_iterationsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::StringVector >::type parameters_to_be_fitted(parameters_to_be_fittedSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
-    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
-    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(runMCMC(start_sd_adaptation, end_sd_adaptation, max_sd, acceptance_ratio, sd_proposals, number_of_iterations, parameters_to_be_fitted, fitted_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice));
+    Rcpp::traits::input_parameter< double >::type initial_K(initial_KSEXP);
+    rcpp_result_gen = Rcpp::wrap(initial_state_sample(fitted_parameters, static_parameters, initial_K));
     return rcpp_result_gen;
 END_RCPP
 }
-// runMCMC_alt_tune
-Rcpp::List runMCMC_alt_tune(int start_sd_adaptation, int end_sd_adaptation, std::vector <double> max_sd, std::vector <double> acceptance_ratio, std::vector<double> sd_proposals, int number_of_iterations, Rcpp::StringVector parameters_to_be_fitted, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::String density_function, Rcpp::String prior_choice);
-RcppExport SEXP _IndianVectorModelling_runMCMC_alt_tune(SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP max_sdSEXP, SEXP acceptance_ratioSEXP, SEXP sd_proposalsSEXP, SEXP number_of_iterationsSEXP, SEXP parameters_to_be_fittedSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP density_functionSEXP, SEXP prior_choiceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_sd_adaptation(start_sd_adaptationSEXP);
-    Rcpp::traits::input_parameter< int >::type end_sd_adaptation(end_sd_adaptationSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type max_sd(max_sdSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type acceptance_ratio(acceptance_ratioSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type sd_proposals(sd_proposalsSEXP);
-    Rcpp::traits::input_parameter< int >::type number_of_iterations(number_of_iterationsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::StringVector >::type parameters_to_be_fitted(parameters_to_be_fittedSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
-    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
-    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(runMCMC_alt_tune(start_sd_adaptation, end_sd_adaptation, max_sd, acceptance_ratio, sd_proposals, number_of_iterations, parameters_to_be_fitted, fitted_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice));
-    return rcpp_result_gen;
-END_RCPP
-}
-// weighted_sampling
-std::vector<int> weighted_sampling(int n, std::vector<double> prob, double p_tot, int K);
-RcppExport SEXP _IndianVectorModelling_weighted_sampling(SEXP nSEXP, SEXP probSEXP, SEXP p_totSEXP, SEXP KSEXP) {
+// weighted_sampling_with_replacement
+std::vector<int> weighted_sampling_with_replacement(int n, std::vector<double> prob, double p_tot, int K);
+RcppExport SEXP _IndianVectorModelling_weighted_sampling_with_replacement(SEXP nSEXP, SEXP probSEXP, SEXP p_totSEXP, SEXP KSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -250,27 +246,79 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type prob(probSEXP);
     Rcpp::traits::input_parameter< double >::type p_tot(p_totSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    rcpp_result_gen = Rcpp::wrap(weighted_sampling(n, prob, p_tot, K));
+    rcpp_result_gen = Rcpp::wrap(weighted_sampling_with_replacement(n, prob, p_tot, K));
+    return rcpp_result_gen;
+END_RCPP
+}
+// runMCMC_joint_props
+Rcpp::List runMCMC_joint_props(int start_sd_adaptation, int end_sd_adaptation, int number_of_iterations, std::vector <double> initial_sds, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::String density_function, Rcpp::String prior_choice, Rcpp::LogicalVector fitted_yn);
+RcppExport SEXP _IndianVectorModelling_runMCMC_joint_props(SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP number_of_iterationsSEXP, SEXP initial_sdsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP density_functionSEXP, SEXP prior_choiceSEXP, SEXP fitted_ynSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_sd_adaptation(start_sd_adaptationSEXP);
+    Rcpp::traits::input_parameter< int >::type end_sd_adaptation(end_sd_adaptationSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_iterations(number_of_iterationsSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type initial_sds(initial_sdsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type model_parameters(model_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
+    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    rcpp_result_gen = Rcpp::wrap(runMCMC_joint_props(start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn));
+    return rcpp_result_gen;
+END_RCPP
+}
+// runMCMC_seq_props
+Rcpp::List runMCMC_seq_props(int start_sd_adaptation, int end_sd_adaptation, std::vector <double> acceptance_ratio, std::vector<double> sd_proposals, int number_of_iterations, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::String density_function, Rcpp::String prior_choice, Rcpp::LogicalVector fitted_yn);
+RcppExport SEXP _IndianVectorModelling_runMCMC_seq_props(SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP acceptance_ratioSEXP, SEXP sd_proposalsSEXP, SEXP number_of_iterationsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP density_functionSEXP, SEXP prior_choiceSEXP, SEXP fitted_ynSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_sd_adaptation(start_sd_adaptationSEXP);
+    Rcpp::traits::input_parameter< int >::type end_sd_adaptation(end_sd_adaptationSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type acceptance_ratio(acceptance_ratioSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type sd_proposals(sd_proposalsSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_iterations(number_of_iterationsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type model_parameters(model_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
+    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    rcpp_result_gen = Rcpp::wrap(runMCMC_seq_props(start_sd_adaptation, end_sd_adaptation, acceptance_ratio, sd_proposals, number_of_iterations, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_IndianVectorModelling_full_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_full_output_particle_filter, 8},
-    {"_IndianVectorModelling_initial_state_sample", (DL_FUNC) &_IndianVectorModelling_initial_state_sample, 2},
-    {"_IndianVectorModelling_prior", (DL_FUNC) &_IndianVectorModelling_prior, 2},
+    {"_IndianVectorModelling_prior_seq_proposals", (DL_FUNC) &_IndianVectorModelling_prior_seq_proposals, 3},
     {"_IndianVectorModelling_likelihood_function", (DL_FUNC) &_IndianVectorModelling_likelihood_function, 8},
-    {"_IndianVectorModelling_posterior", (DL_FUNC) &_IndianVectorModelling_posterior, 11},
-    {"_IndianVectorModelling_min_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_min_output_particle_filter, 8},
+    {"_IndianVectorModelling_posterior_seq_proposals", (DL_FUNC) &_IndianVectorModelling_posterior_seq_proposals, 12},
+    {"_IndianVectorModelling_seq_proposal_function", (DL_FUNC) &_IndianVectorModelling_seq_proposal_function, 2},
+    {"_IndianVectorModelling_seq_proposal_SD_adapter", (DL_FUNC) &_IndianVectorModelling_seq_proposal_SD_adapter, 4},
+    {"_IndianVectorModelling_joint_proposal_function", (DL_FUNC) &_IndianVectorModelling_joint_proposal_function, 2},
+    {"_IndianVectorModelling_joint_proposal_SD_adapter", (DL_FUNC) &_IndianVectorModelling_joint_proposal_SD_adapter, 7},
+    {"_IndianVectorModelling_posterior_joint_proposals", (DL_FUNC) &_IndianVectorModelling_posterior_joint_proposals, 10},
     {"_IndianVectorModelling_mosquito_population_model", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model, 6},
+    {"_IndianVectorModelling_mvrnormArma", (DL_FUNC) &_IndianVectorModelling_mvrnormArma, 2},
+    {"_IndianVectorModelling_min_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_min_output_particle_filter, 8},
+    {"_IndianVectorModelling_full_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_full_output_particle_filter, 8},
     {"_IndianVectorModelling_Negative_Binomial", (DL_FUNC) &_IndianVectorModelling_Negative_Binomial, 4},
     {"_IndianVectorModelling_Particle_Weight_Normalisation", (DL_FUNC) &_IndianVectorModelling_Particle_Weight_Normalisation, 1},
-    {"_IndianVectorModelling_proposal_function", (DL_FUNC) &_IndianVectorModelling_proposal_function, 2},
-    {"_IndianVectorModelling_proposal_SD_adapter", (DL_FUNC) &_IndianVectorModelling_proposal_SD_adapter, 4},
-    {"_IndianVectorModelling_proposal_SD_adapter_mark_two", (DL_FUNC) &_IndianVectorModelling_proposal_SD_adapter_mark_two, 6},
-    {"_IndianVectorModelling_runMCMC", (DL_FUNC) &_IndianVectorModelling_runMCMC, 16},
-    {"_IndianVectorModelling_runMCMC_alt_tune", (DL_FUNC) &_IndianVectorModelling_runMCMC_alt_tune, 16},
-    {"_IndianVectorModelling_weighted_sampling", (DL_FUNC) &_IndianVectorModelling_weighted_sampling, 4},
+    {"_IndianVectorModelling_initial_state_sample", (DL_FUNC) &_IndianVectorModelling_initial_state_sample, 3},
+    {"_IndianVectorModelling_weighted_sampling_with_replacement", (DL_FUNC) &_IndianVectorModelling_weighted_sampling_with_replacement, 4},
+    {"_IndianVectorModelling_runMCMC_joint_props", (DL_FUNC) &_IndianVectorModelling_runMCMC_joint_props, 14},
+    {"_IndianVectorModelling_runMCMC_seq_props", (DL_FUNC) &_IndianVectorModelling_runMCMC_seq_props, 15},
     {NULL, NULL, 0}
 };
 

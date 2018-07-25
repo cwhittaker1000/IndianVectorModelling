@@ -3,6 +3,7 @@
 // [[Rcpp::depends(BH)]]
 // [[Rcpp::plugins(cpp11)]]
 
+//' @export
 // [[Rcpp::export]]
 double Negative_Binomial(double k, double n, double r, double p) {
   double m = p * n;

@@ -1,6 +1,7 @@
 #include "MCMC_Functions.hpp"
 #include "Proposal_Functions.hpp"
 
+//' @export
 // [[Rcpp::export]]
 Rcpp::List runMCMC_alt_tune(int start_sd_adaptation, // Time to start SD adaptation - relates to SD adaptation
                             int end_sd_adaptation,
@@ -17,7 +18,8 @@ Rcpp::List runMCMC_alt_tune(int start_sd_adaptation, // Time to start SD adaptat
                             int number_of_datapoints, // Number of datapoints -  relates to Particle Filter/Model
                             int data_timeframe, // Time between datapoints - relates to Particle Filter/Model
                             Rcpp::String density_function,
-                            Rcpp::String prior_choice) { // Which density function regulating mortality - relates to Particle Filter/Model
+                            Rcpp::String prior_choice,
+                            Rcpp::LogicalVector fitted_yn) { // Which density function regulating mortality - relates to Particle Filter/Model
 
   // Storage for the MCMC chains
   Rcpp::NumericMatrix MCMC_chain_output(number_of_iterations + 1, parameters_to_be_fitted.size());
@@ -41,7 +43,7 @@ Rcpp::List runMCMC_alt_tune(int start_sd_adaptation, // Time to start SD adaptat
   // allows me to calculate the posterior for my initial parameter values.
   double current_posterior_likelihood = posterior(N, rainfall, obsData, number_of_datapoints,
                                                   data_timeframe, fitted_parameters, static_parameters, density_function,
-                                                  fitted_parameters[0], parameters_to_be_fitted[0], prior_choice); // whole bunch of inputs here, see if I can streamline this
+                                                  fitted_parameters[0], 0, prior_choice, fitted_yn); // whole bunch of inputs here, see if I can streamline this
 
   // Initialising variables required for the standard deviation tunning
   std::vector <double> acceptances(parameters_to_be_fitted.size(), 0); // double check this generates a vector with the right dimensions and contents
@@ -53,25 +55,24 @@ Rcpp::List runMCMC_alt_tune(int start_sd_adaptation, // Time to start SD adaptat
     for (int j = 0; j < parameters_to_be_fitted.size(); j++) {
 
       // Creating a vector of fitted parameter values to pass into the posterior function
-      Rcpp::NumericVector parameters_for_fitting(16);
+      Rcpp::NumericVector parameters_for_fitting(parameters_to_be_fitted.size() + 4);
       for (int k = 0; k < parameters_for_fitting.size(); k++) {
-        if (k < 12) {
+        if (k < parameters_to_be_fitted.size()) {
           parameters_for_fitting[k] = MCMC_chain_output(i, k);
         }
-        else if (k == 12) {
+        else if (k == parameters_to_be_fitted.size()) {
           parameters_for_fitting[k] = 0; //E
         }
-        else if (k == 13) {
+        else if (k == parameters_to_be_fitted.size() + 1) {
           parameters_for_fitting[k] = 0; //L
         }
-        else if (k == 14) {
+        else if (k == parameters_to_be_fitted.size() + 2) {
           parameters_for_fitting[k] = 0; //P
         }
-        else if (k == 15) {
+        else if (k == parameters_to_be_fitted.size() + 3) {
           parameters_for_fitting[k] = 0; //M
         }
       }
-      parameters_for_fitting.names() = Rcpp::StringVector::create("dE", "dL", "dP", "muE0", "muL0", "muP", "muM", "lambda", "tau", "beta", "overdisp", "pop_frac", "E", "L", "P", "M");
 
       // Generating the proposed parameter value
       double current_parameter_value = MCMC_chain_output(i, j);
@@ -80,7 +81,7 @@ Rcpp::List runMCMC_alt_tune(int start_sd_adaptation, // Time to start SD adaptat
       // Assessing the likelihood of the proposed parameter value compared to the current parameter value
       double proposed_posterior_likelihood = posterior(N, rainfall, obsData, number_of_datapoints,
                                                        data_timeframe, parameters_for_fitting, static_parameters, density_function,
-                                                       proposed_parameter_value, parameters_to_be_fitted[j], prior_choice);
+                                                       proposed_parameter_value, 0, prior_choice, fitted_yn);
 
       double likelihood_ratio = exp(proposed_posterior_likelihood - current_posterior_likelihood);
 

@@ -3,6 +3,7 @@
 // [[Rcpp::depends(BH)]]
 // [[Rcpp::plugins(cpp11)]]
 
+//' @export
 // [[Rcpp::export]]
 std::vector <double> Particle_Weight_Normalisation(std::vector <double> particle_weights) {
 

@@ -4,12 +4,18 @@
 #include "weighted_sampling_with_replacement.hpp"
 #include "Initial_State_Sample.hpp"
 
+//' @export
 // [[Rcpp::export]]
 Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String density_function) {
 
   // Specifying the INITIAL VALUES E, L, P and M and generating the PARTICLES
-  Rcpp::NumericVector initial_states = initial_state_sample(fitted_parameters, static_parameters);
+  // double initial_K = rainfall[0]; //Need to check this is alright- think it's only okay for the linear relationship with rainfall; will need to change when I add in other relationships with rainfall
+  // std::vector <int> initial_states = initial_state_sample(fitted_parameters, static_parameters, initial_K);
+
   Rcpp::NumericMatrix particles(N, 4);
+  std::vector <int> initial_states{200, 50, 30, 50};
+
+  // Filling the particles vector with the initial states
   for (int x = 0; x < N; x++) {
     particles(x, 0) = initial_states[0];
     particles(x, 1) = initial_states[1];
@@ -40,6 +46,7 @@ Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std
   Rcpp::NumericMatrix M_values(number_of_datapoints, N);
   Rcpp::NumericMatrix particle_weights_proper(number_of_datapoints, N);
 
+  double final_log_likelihood = 0;
 
   // Running the PARTICLE FILTER
   for (int i = 0; i < number_of_datapoints; i++) {  // need to check that it's -2 and not -1. Think I'm right
@@ -120,6 +127,10 @@ Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std
     }
   }
 
+  for (int l = 0; l < number_of_datapoints; l++) {
+    final_log_likelihood = final_log_likelihood + Rcpp::mean(loglikelihood(l, Rcpp::_));
+  }
+
   return Rcpp::List::create(Rcpp::Named("E_Output") = E_after,
                             Rcpp::Named("L_Output") = L_after,
                             Rcpp::Named("P_Output") = P_after,
@@ -127,5 +138,7 @@ Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std
                             Rcpp::Named("Timepoints") = timepoints,
                             Rcpp::Named("Loglikelihood") = loglikelihood,
                             Rcpp::Named("M_Values") = M_values,
-                            Rcpp::Named("particle weights") = particle_weights_proper);
+                            Rcpp::Named("particle weights") = particle_weights_proper,
+                            Rcpp::Named("initial states") = initial_states,
+                            Rcpp::Named("final log lik") = final_log_likelihood);
 }

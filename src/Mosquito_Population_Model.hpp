@@ -2,7 +2,7 @@
 #define MOSQUITO_POPULATION_MODEL_H
 
 // Things that need to be included in the file mosquito_population_model.cpp
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
 #include <vector>
 #include <map>
 #include <iostream>

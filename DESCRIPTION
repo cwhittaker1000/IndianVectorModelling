@@ -11,7 +11,8 @@ LazyData: true
 Imports: dplyr,
     Rcpp,
     BH,
-    RcppArmadillo
+    RcppArmadillo,
+    mvnfast
 RoxygenNote: 6.0.1
 Suggests: testthat
 LinkingTo: Rcpp,

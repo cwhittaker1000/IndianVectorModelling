@@ -3,14 +3,23 @@
 #include "Particle_Weight_Normalisation.hpp"
 #include "weighted_sampling_with_replacement.hpp"
 #include "Initial_State_Sample.hpp"
+#include <boost/numeric/ublas/matrix.hpp>
 
 
+//' @export
 // [[Rcpp::export]]
-double min_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String density_function) {
+double min_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints,
+                                  int data_timeframe, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters,
+                                  Rcpp::String density_function) {
 
   // Specifying the INITIAL VALUES E, L, P and M and generating the PARTICLES
-  Rcpp::NumericVector initial_states = initial_state_sample(fitted_parameters, static_parameters);
-  Rcpp::NumericMatrix particles(N, 4);
+  // double initial_K = rainfall[0]; //Need to check this is alright- think it's only okay for the linear relationship with rainfall; will need to change when I add in other relationships with rainfall
+  // std::vector <int> initial_states = initial_state_sample(fitted_parameters, static_parameters, initial_K);
+
+  std::vector <int> initial_states{200, 50, 30, 50};
+
+  // Filling the particles vector with the initial states
+  boost::numeric::ublas::matrix <int> particles(N, 4);
   for (int x = 0; x < N; x++) {
     particles(x, 0) = initial_states[0];
     particles(x, 1) = initial_states[1];
@@ -22,7 +31,7 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
   //    - RETURNS A VECTOR LENGTH #TIMEPOINTS + 1, DON'T FORGET THE +1 - E.G. 20 DATAPOINTS = 21 TIMEPOINTS TO RUN MODEL BETWEEN
   int total_length_in_steps = (data_timeframe * number_of_datapoints) / static_parameters[0]; // total number of days the model is run for
   int length_of_one_step = data_timeframe / static_parameters[0]; // static_parameters[0] is dt.
-  Rcpp::NumericVector timepoints(number_of_datapoints + 1)                   ;
+  std::vector <int> timepoints(number_of_datapoints + 1)                   ;
   for(int p = 0; p < number_of_datapoints + 1; p++) {
     if (p == 0) {
       timepoints[p] = 0;
@@ -41,7 +50,7 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
 
     // Pre-allocating storage for TEMPORARY OUTPUTS
     std::vector <double> particle_weights(N);
-    Rcpp::NumericMatrix final_output_particles_before_weighting(N, 4);
+    boost::numeric::ublas::matrix <double> final_output_particles_before_weighting(N, 4);
 
     // Iterating over the NUMBER OF PARTICLES we're using
     for (int j = 0; j < N; j++) {

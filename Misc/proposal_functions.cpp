@@ -1,5 +1,6 @@
 #include "Proposal_Functions.hpp"
 
+//' @export
 // [[Rcpp::export]]
 double proposal_function(double sd, double current_parameter_value) {
   double ran = R::rnorm(0.0, sd);
@@ -10,6 +11,7 @@ double proposal_function(double sd, double current_parameter_value) {
   return proposed_value;
 }
 
+//' @export
 // [[Rcpp::export]]
 double proposal_SD_adapter(double current_sd, double acceptance_ratio, double current_acceptance_ratio, double max_sd){
 
@@ -35,6 +37,7 @@ double proposal_SD_adapter(double current_sd, double acceptance_ratio, double cu
 }
 
 
+//' @export
 // [[Rcpp::export]]
 double proposal_SD_adapter_mark_two(double current_sd, double current_acceptance_ratio, double max_sd, double cooling_factor,
                                     double current_iteration, double iteration_cooling_began) {
@@ -61,3 +64,19 @@ double proposal_SD_adapter_mark_two(double current_sd, double current_acceptance
   return res;
 }
 
+
+//' @export
+// [[Rcpp::export]]
+double proposal_SD_adapter_mark_three(double accepted_variable, double current_iteration, double iteration_cooling_began, double current_sd) {
+
+  double iterations_since_cooling_began = current_iteration - iteration_cooling_began;
+
+  double scaling_factor = pow((iterations_since_cooling_began + 1), -0.6);
+
+  double log_updated_sd = log(current_sd) + scaling_factor * (accepted_variable - 0.25);
+
+  double updated_sd = exp(log_updated_sd);
+
+  return(updated_sd);
+
+}
