@@ -85,18 +85,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// joint_proposal_function
-double joint_proposal_function(double sd, double current_parameter_value);
-RcppExport SEXP _IndianVectorModelling_joint_proposal_function(SEXP sdSEXP, SEXP current_parameter_valueSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
-    Rcpp::traits::input_parameter< double >::type current_parameter_value(current_parameter_valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(joint_proposal_function(sd, current_parameter_value));
-    return rcpp_result_gen;
-END_RCPP
-}
 // joint_proposal_SD_adapter
 Rcpp::List joint_proposal_SD_adapter(double accepted_variable, double current_iteration, double iteration_cooling_began, double current_scaling_factor, arma::mat mu_previous, arma::mat current_parameter_values, arma::mat current_covariance_matrix);
 RcppExport SEXP _IndianVectorModelling_joint_proposal_SD_adapter(SEXP accepted_variableSEXP, SEXP current_iterationSEXP, SEXP iteration_cooling_beganSEXP, SEXP current_scaling_factorSEXP, SEXP mu_previousSEXP, SEXP current_parameter_valuesSEXP, SEXP current_covariance_matrixSEXP) {
@@ -299,6 +287,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// testerr
+Rcpp::List testerr(int start_sd_adaptation, int end_sd_adaptation, int number_of_iterations, std::vector <double> initial_sds, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::String density_function, Rcpp::String prior_choice, Rcpp::LogicalVector fitted_yn);
+RcppExport SEXP _IndianVectorModelling_testerr(SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP number_of_iterationsSEXP, SEXP initial_sdsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP density_functionSEXP, SEXP prior_choiceSEXP, SEXP fitted_ynSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_sd_adaptation(start_sd_adaptationSEXP);
+    Rcpp::traits::input_parameter< int >::type end_sd_adaptation(end_sd_adaptationSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_iterations(number_of_iterationsSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type initial_sds(initial_sdsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type model_parameters(model_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
+    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
+    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    rcpp_result_gen = Rcpp::wrap(testerr(start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_IndianVectorModelling_prior_seq_proposals", (DL_FUNC) &_IndianVectorModelling_prior_seq_proposals, 3},
@@ -306,7 +318,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_IndianVectorModelling_posterior_seq_proposals", (DL_FUNC) &_IndianVectorModelling_posterior_seq_proposals, 12},
     {"_IndianVectorModelling_seq_proposal_function", (DL_FUNC) &_IndianVectorModelling_seq_proposal_function, 2},
     {"_IndianVectorModelling_seq_proposal_SD_adapter", (DL_FUNC) &_IndianVectorModelling_seq_proposal_SD_adapter, 4},
-    {"_IndianVectorModelling_joint_proposal_function", (DL_FUNC) &_IndianVectorModelling_joint_proposal_function, 2},
     {"_IndianVectorModelling_joint_proposal_SD_adapter", (DL_FUNC) &_IndianVectorModelling_joint_proposal_SD_adapter, 7},
     {"_IndianVectorModelling_posterior_joint_proposals", (DL_FUNC) &_IndianVectorModelling_posterior_joint_proposals, 10},
     {"_IndianVectorModelling_mosquito_population_model", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model, 6},
@@ -319,6 +330,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_IndianVectorModelling_weighted_sampling_with_replacement", (DL_FUNC) &_IndianVectorModelling_weighted_sampling_with_replacement, 4},
     {"_IndianVectorModelling_runMCMC_joint_props", (DL_FUNC) &_IndianVectorModelling_runMCMC_joint_props, 14},
     {"_IndianVectorModelling_runMCMC_seq_props", (DL_FUNC) &_IndianVectorModelling_runMCMC_seq_props, 15},
+    {"_IndianVectorModelling_testerr", (DL_FUNC) &_IndianVectorModelling_testerr, 14},
     {NULL, NULL, 0}
 };
 

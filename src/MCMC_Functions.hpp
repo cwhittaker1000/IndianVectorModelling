@@ -14,7 +14,6 @@ double posterior_seq_proposals(int N, std::vector <double> rainfall, std::vector
 double seq_proposal_SD_adapter(double accepted_variable, double current_iteration, double iteration_cooling_began,
                                double current_sd);
 double seq_proposal_function(double sd, double current_parameter_value);
-double joint_proposal_function(double sd, double current_parameter_value);
 Rcpp::List joint_proposal_SD_adapter(double accepted_variable, double current_iteration, double iteration_cooling_began,
                                      double current_scaling_factor, arma::mat mu_previous, arma::mat current_parameter_values, // technically parameter values for t + 1 as the acceptance/rejection step precedes calling this function
                                      arma::mat current_covariance_matrix);

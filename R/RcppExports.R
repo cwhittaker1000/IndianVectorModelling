@@ -27,11 +27,6 @@ seq_proposal_SD_adapter <- function(accepted_variable, current_iteration, iterat
 }
 
 #' @export
-joint_proposal_function <- function(sd, current_parameter_value) {
-    .Call('_IndianVectorModelling_joint_proposal_function', PACKAGE = 'IndianVectorModelling', sd, current_parameter_value)
-}
-
-#' @export
 joint_proposal_SD_adapter <- function(accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix) {
     .Call('_IndianVectorModelling_joint_proposal_SD_adapter', PACKAGE = 'IndianVectorModelling', accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix)
 }
@@ -89,5 +84,10 @@ runMCMC_joint_props <- function(start_sd_adaptation, end_sd_adaptation, number_o
 #' @export
 runMCMC_seq_props <- function(start_sd_adaptation, end_sd_adaptation, acceptance_ratio, sd_proposals, number_of_iterations, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn) {
     .Call('_IndianVectorModelling_runMCMC_seq_props', PACKAGE = 'IndianVectorModelling', start_sd_adaptation, end_sd_adaptation, acceptance_ratio, sd_proposals, number_of_iterations, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn)
+}
+
+#' @export
+testerr <- function(start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn) {
+    .Call('_IndianVectorModelling_testerr', PACKAGE = 'IndianVectorModelling', start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn)
 }
 

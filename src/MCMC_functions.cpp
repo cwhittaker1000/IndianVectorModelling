@@ -149,17 +149,7 @@ double seq_proposal_SD_adapter(double accepted_variable, double current_iteratio
 }
 
 
-//' @export
-// [[Rcpp::export]]
-double joint_proposal_function(double sd, double current_parameter_value) {
-  double ran = R::rnorm(0.0, sd);
-  double proposed_value = ran + current_parameter_value;
-  if (proposed_value <= 0) {
-    proposed_value = 0;
-  }
-  return proposed_value;
-}
-
+// BOTH MU_PREVIOUS AND CURRENT_PARAMETERS NEED TO BE ROW VECTORS
 
 //' @export
 // [[Rcpp::export]]
@@ -178,7 +168,8 @@ Rcpp::List joint_proposal_SD_adapter(double accepted_variable, double current_it
 
   return(Rcpp::List::create(Rcpp::Named("New_Covariance_Matrix") = new_covariance_matrix,
                             Rcpp::Named("New_Mu") = new_mu,
-                            Rcpp::Named("New_Scaling_Factor") = new_scaling_factor));
+                            Rcpp::Named("New_Scaling_Factor") = new_scaling_factor,
+                            Rcpp::Named("Cooldown") = cooldown));
 
 }
 

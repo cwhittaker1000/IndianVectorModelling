@@ -23,14 +23,22 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
   Rcpp::NumericMatrix MCMC_chain_output(number_of_iterations + 1, Rcpp::sum(fitted_yn));
   double acceptances = 0;
   double rejections = 0;
+  Rcpp::NumericVector mu_tracker(Rcpp::sum(fitted_yn));
+
   double current_acceptance_ratio = 0;
-  Rcpp::NumericVector acceptance_ratio_tracker(number_of_iterations + 1);
+  Rcpp::NumericVector total_acceptance_ratio_tracker(number_of_iterations + 1);
   Rcpp::NumericVector accepted_checker(number_of_iterations + 1);
+  Rcpp::NumericVector accepted_status_checker(number_of_iterations + 1);
+
+  double acceptances_adapt_only = 0;
+  double cooldown;
+  Rcpp::NumericVector post_adapt_acceptance_ratio_tracker(number_of_iterations + 1);
 
   // Storage for things that generate flexibility in choosing which parameters to fit
   Rcpp::StringVector parameter_names = fitted_yn.names();
   Rcpp::StringVector naming(Rcpp::sum(fitted_yn));
   Rcpp::NumericVector indexer(Rcpp::sum(fitted_yn));
+  Rcpp::NumericMatrix latest_parameter_values_output(number_of_iterations + 1, Rcpp::sum(fitted_yn));
 
   // Assigning initial values to the first row of the MCMC output and naming that output's columns
   int p = 0;
@@ -45,13 +53,16 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
   }
   colnames(MCMC_chain_output) = naming;
 
-  // Defining variables involved in the Adaptive MCMC part CHECK WHETHER SIZE NEEDS TO BE INITIALISED
+  // Defining variables involved in the Adaptive MCMC part
   double accepted_variable;
-  arma::mat current_covariance_matrix(fitted_yn.size(), fitted_yn.size());
-  for (int x = 0; x < fitted_yn.size(); x++) {
-    for (int y = 0; y < fitted_yn.size(); y++) {
+  arma::mat current_covariance_matrix(Rcpp::sum(fitted_yn), Rcpp::sum(fitted_yn));
+  for (int x = 0; x < Rcpp::sum(fitted_yn); x++) {
+
+    int index = indexer[x];
+
+    for (int y = 0; y < Rcpp::sum(fitted_yn); y++) {
       if (y == x) {
-        current_covariance_matrix(x, y) = initial_sds[x];
+        current_covariance_matrix(x, y) = initial_sds[index];
       }
       else {
         current_covariance_matrix(x, y) = 0;
@@ -61,9 +72,9 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
   arma::mat initial_covariance_matrix_checker = current_covariance_matrix;
 
   //NOT SURE THIS IS WHAT I WANT TO BE ASSIGNING AS THE INITIAL VALUES FOR MU TBH.
-  // this needs to be a row vector at any rate
-  arma::mat current_mu(fitted_yn.size(), 1);
-  for (int x = 0; x < fitted_yn.size(); x++) {
+  // this needs to be a ROW VECTOR at any rate
+  arma::mat current_mu(1, Rcpp::sum(fitted_yn));
+  for (int x = 0; x < Rcpp::sum(fitted_yn); x++) {
     int specific_index = indexer[x];
     current_mu(0, x) = model_parameters[specific_index];
   }
@@ -91,9 +102,10 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
   for (int i = 0; i < number_of_iterations; i++) {
 
       // Generating the proposed parameter values
-      arma::mat current_parameter_values(fitted_yn.size(), 1);
-      for (int u = 0; u < current_parameter_values.size(); u++) {
-        current_parameter_values(u, 0) = MCMC_chain_output(i, u);
+      // CURRENT_PARAMETER_VALUES needs to be a ROW VECTOR!!!!
+      arma::mat current_parameter_values(1, Rcpp::sum(fitted_yn));
+      for (int u = 0; u < Rcpp::sum(fitted_yn); u++) {
+        current_parameter_values(0, u) = MCMC_chain_output(i, u);
       }
       arma::mat proposed_parameter_values = mvrnormArma(current_parameter_values, current_covariance_matrix);
 
@@ -141,7 +153,9 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
 
       // Tracking the acceptance ratio
       current_acceptance_ratio = (acceptances / (i + 1));
-      acceptance_ratio_tracker[i] = current_acceptance_ratio;
+      total_acceptance_ratio_tracker[i] = current_acceptance_ratio;
+
+      accepted_status_checker[i] = accepted_variable;
 
       // Adapting the standard deviation of parameter proposals to ensure a decent acceptance ratio
       if (i > start_sd_adaptation & i < end_sd_adaptation) {
@@ -150,7 +164,19 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
         // until the start of the next iteration. The MCMC Output matrix IS however and so I use that to fill a temporary
         // vector containing what either are currently (if proposed were rejected) the parameter values OR what are
         // going to be assigned to current_parameter_values in the beginning of the next iteration (if proposed were accepted).
-        arma::mat latest_parameter_values = MCMC_chain_output(i + 1, Rcpp::_);
+        arma::mat latest_parameter_values_but_col = MCMC_chain_output(i + 1, Rcpp::_); //double check this should be i + 1 and not i
+        arma::mat latest_parameter_values = latest_parameter_values_but_col.t();
+
+        // Tracking acceptance ratio only when adaptation starts
+        if (accepted_variable == 1) {
+          acceptances_adapt_only = acceptances_adapt_only + 1;
+        }
+
+        post_adapt_acceptance_ratio_tracker[i] = acceptances_adapt_only/(i - start_sd_adaptation);
+
+        for (int h = 0; h < Rcpp::sum(fitted_yn); h++) {
+          latest_parameter_values_output(i, h) = latest_parameter_values[h];
+        }
 
         Rcpp::List adapter_output = joint_proposal_SD_adapter(accepted_variable, i, start_sd_adaptation,
                                                               current_scaling_factor, current_mu, latest_parameter_values, // technically parameter values for t + 1 as the acceptance/rejection step precedes calling this function
@@ -160,8 +186,9 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
         // Ask Rich if there's a nicer way of doing this.
         Rcpp::NumericVector new_mu = adapter_output["New_Mu"];
         Rcpp::NumericMatrix new_covariance_matrix = adapter_output["New_Covariance_Matrix"];
+        cooldown = adapter_output["Cooldown"];
 
-        for (int u = 0; u < current_parameter_values.size(); u++) {
+        for (int u = 0; u < Rcpp::sum(fitted_yn); u++) {
           current_mu[u] = new_mu[u];
         }
         for (int u = 0; u < current_parameter_values.size(); u++) {
@@ -173,14 +200,31 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
 
       }
 
+      if (i == 1 | i == 2 | i == 3 | i == 4 | i == 5 | i == 6 | i == 7 | i == 8 | i == 9 | i == 10 | i % 100 == 0) {
+        Rcpp::Rcout << "The iteration number is " << i << std::endl;
+        Rcpp::Rcout << current_covariance_matrix << "This is the covariance matrix" << std::endl;
+        Rcpp::Rcout << "The overall acceptance ratio is " << current_acceptance_ratio << std::endl;
+        if (i > start_sd_adaptation & i < end_sd_adaptation) {
+          Rcpp::Rcout << "The current scaling factor is " << current_scaling_factor << std::endl;
+          Rcpp::Rcout << "The current mu is " << current_mu << std::endl;
+          Rcpp::Rcout << "The cooldown factor is " << cooldown << std::endl;
+          Rcpp::Rcout << "The acceptance ratio since starting to adapt is " << post_adapt_acceptance_ratio_tracker[i] << "\n" << std::endl;
+        }
+        else {
+          Rcpp::Rcout << "\n " << std::endl;
+
+        }
+      }
   }
 
   return(Rcpp::List::create(Rcpp::Named("MCMC_Output") = MCMC_chain_output,
-                            Rcpp::Named("Acceptance_Ratio_Final") = current_acceptance_ratio,
+                            Rcpp::Named("Acceptance_Ratio_Total") = current_acceptance_ratio,
+                            Rcpp::Named("Acceptance_Ratio_Post_Adapt") = post_adapt_acceptance_ratio_tracker,
                             Rcpp::Named("Acceptance_Checker") = accepted_checker,
-                            Rcpp::Named("Acceptances") = acceptances,
-                            Rcpp::Named("Rejections") = rejections,
-                            Rcpp::Named("Acceptance Ratio Tracker") = acceptance_ratio_tracker,
-                            Rcpp::Named("naming") = naming,
-                            Rcpp::Named("indexer") = indexer));
+                            Rcpp::Named("Acceptances_Post_Adapt") = acceptances_adapt_only,
+                            Rcpp::Named("Acceptances_Total")= acceptances,
+                            Rcpp::Named("Accepted_Variable_Checker") = accepted_status_checker,
+                            Rcpp::Named("initial_covariance_matrix") = initial_covariance_matrix_checker,
+                            Rcpp::Named("final_covariance_matrix") = current_covariance_matrix,
+                            Rcpp::Named("Mu_Output") = latest_parameter_values_output));
 }
