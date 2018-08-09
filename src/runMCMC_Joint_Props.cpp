@@ -118,6 +118,17 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
       // This might be superfluous
       model_parameters_for_MCMC.names() = Rcpp::StringVector::create("dE", "dL", "dP", "muE0", "muL0", "muP", "muM", "lambda", "tau", "beta", "overdisp", "pop_frac", "E", "L", "P", "M");
 
+      // Manually handling instances when proposed overdispersion value is less than or equal to 0
+      // CURRENTLY THIS CHANGES THE MODEL INPUT BUT DOESN'T CHANGE WHAT GETS ADDED TO THE MCMC OUTPUT
+      // IF THE PROPOSED VALUE IS ACCEPTED- THAT IS STILL WHAT WAS INITIALLY PROPOSED AND CONTAINED
+      // WITHIN "PROPOSED_PARAMETERS". THINK THE SOLUTION IS TO USE INDEXER AND ADD TO MCMC_OUTPUT
+      // FROM MODEL_PARAMETERS_FOR_MCMC DIRECTLY.
+      if (model_parameters_for_MCMC["overdisp"] <= 0) {
+        model_parameters_for_MCMC["overdisp"] = 0.001;
+      }
+      if (model_parameters_for_MCMC["pop_frac"] <= 0) {
+        model_parameters_for_MCMC["pop_frac"] = 0.001;
+      }
 
       // Assessing the likelihood of the proposed parameter value compared to the current parameter value
       double proposed_posterior_likelihood = posterior_joint_proposals(N, rainfall, obsData, number_of_datapoints,

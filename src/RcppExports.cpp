@@ -287,27 +287,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// testerr
-Rcpp::List testerr(int start_sd_adaptation, int end_sd_adaptation, int number_of_iterations, std::vector <double> initial_sds, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, int N, std::vector <double> rainfall, std::vector <int> obsData, int number_of_datapoints, int data_timeframe, Rcpp::String density_function, Rcpp::String prior_choice, Rcpp::LogicalVector fitted_yn);
-RcppExport SEXP _IndianVectorModelling_testerr(SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP number_of_iterationsSEXP, SEXP initial_sdsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP number_of_datapointsSEXP, SEXP data_timeframeSEXP, SEXP density_functionSEXP, SEXP prior_choiceSEXP, SEXP fitted_ynSEXP) {
+// tester_mosquito_population_model
+Rcpp::List tester_mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship);
+RcppExport SEXP _IndianVectorModelling_tester_mosquito_population_model(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_sd_adaptation(start_sd_adaptationSEXP);
-    Rcpp::traits::input_parameter< int >::type end_sd_adaptation(end_sd_adaptationSEXP);
-    Rcpp::traits::input_parameter< int >::type number_of_iterations(number_of_iterationsSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type initial_sds(initial_sdsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type model_parameters(model_parametersSEXP);
+    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
+    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
-    Rcpp::traits::input_parameter< int >::type number_of_datapoints(number_of_datapointsSEXP);
-    Rcpp::traits::input_parameter< int >::type data_timeframe(data_timeframeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type density_function(density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type prior_choice(prior_choiceSEXP);
-    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
-    rcpp_result_gen = Rcpp::wrap(testerr(start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn));
+    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
+    rcpp_result_gen = Rcpp::wrap(tester_mosquito_population_model(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -330,7 +323,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_IndianVectorModelling_weighted_sampling_with_replacement", (DL_FUNC) &_IndianVectorModelling_weighted_sampling_with_replacement, 4},
     {"_IndianVectorModelling_runMCMC_joint_props", (DL_FUNC) &_IndianVectorModelling_runMCMC_joint_props, 14},
     {"_IndianVectorModelling_runMCMC_seq_props", (DL_FUNC) &_IndianVectorModelling_runMCMC_seq_props, 15},
-    {"_IndianVectorModelling_testerr", (DL_FUNC) &_IndianVectorModelling_testerr, 14},
+    {"_IndianVectorModelling_tester_mosquito_population_model", (DL_FUNC) &_IndianVectorModelling_tester_mosquito_population_model, 7},
     {NULL, NULL, 0}
 };
 

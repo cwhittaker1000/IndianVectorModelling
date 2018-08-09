@@ -5,7 +5,9 @@
 
 //' @export
 // [[Rcpp::export]]
-Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function) {
+Rcpp::List tester_mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters,
+                                            Rcpp::NumericVector static_parameters, std::vector<double> rainfall,
+                                            Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship) {
 
   // Setting the Start and Endtime
   int t = start_time;
@@ -48,36 +50,101 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
   while (t < end_time) {
 
     // Specifying the value of K for all timepoints
-    if (t <= tau_with_dt) {
+    if (rainfall_relationship == "mean") {
 
-      std::vector<double>::const_iterator first_fudge = rF.begin();
-      std::vector<double>::const_iterator last_fudge = rF.begin() + t;
-      std::vector<double> rFx_fudge(first_fudge, last_fudge);
-      rFsum_fudge = std::accumulate(rFx_fudge.begin(), rFx_fudge.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
+      if (t <= tau_with_dt) {
 
-      if (t == 0) {
-        K = rainfall[t];
+        std::vector<double>::const_iterator first_fudge = rF.begin();
+        std::vector<double>::const_iterator last_fudge = rF.begin() + t;
+        std::vector<double> rFx_fudge(first_fudge, last_fudge);
+        rFsum_fudge = std::accumulate(rFx_fudge.begin(), rFx_fudge.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
+
+        if (t == 0) {
+          K = rainfall[t];
+        }
+        else {
+          K = ((1.0 / t) * rFsum_fudge);
+        }
+
+        koutput[t] = K;
       }
 
       else {
-        K = ((1.0 / t) * rFsum_fudge);
+
+        std::vector<double>::const_iterator first = rF.begin() + t - tau_with_dt;
+        std::vector<double>::const_iterator last = rF.begin() + t;
+        std::vector<double> rFx(first, last);
+        rFsum = std::accumulate(rFx.begin(), rFx.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
+        K = (1.0 + ((1.0 / tau_with_dt) * rFsum));
+        koutput[t] = K;
+
+      }
+    }
+
+    if (rainfall_relationship == "linearly_weighted") {
+
+      // not sure if I'm satisfied that this is the best way to handle
+      // the initial timepoints when t < tau_with_dt. Might just
+      // whack a single value in etc.
+      if (t <= tau_with_dt) {
+
+        double rFsum = 0.0;
+        for (int r = 0; r < t; r++) {
+          rFsum = rFsum + ((r + 1) * rF[r]);
+        }
+
+        if (t == 0) {
+          K = rF[t];
+        }
+        else {
+          K = ((2.0 / pow(t + 1, 2)) * rFsum);
+        }
+
+        koutput[t] = K;
       }
 
+      else {
+
+        double rFsum = 0.0;
+        int counter = 1;
+        for (int r = (t - tau_with_dt + 1); r <= t; r++) {
+
+          // THIS I think takes the rainfall up to the day before t: I start with t = 0, and
+          // so t = 1 is actually day 2 etc and this needs to be accounted for given that
+          // the model I'm exploring currently includes tau days previous INCLUDING present day (as in Michael's)
+          // for (int r = (t - tau_with_dt); r < t; r++) {
+          // rFsum = rFsum + (((t - tau_with_dt + counter) - t + tau_with_dt) * rF[r]);
+
+          // This should be correct
+          rFsum = rFsum + (((t - tau_with_dt + counter) - t + tau_with_dt) * rF[r]);
+          counter = counter + 1;
+        }
+        K = (1.0 + ((2.0 / pow(tau_with_dt, 2)) * rFsum));
+        koutput[t] = K;
+
+      }
+    }
+
+    // NOTE HAD TO CHANGE TAU_WITH_DT FROM INTEGER TO DOUBLE WHEN I CREATE TEMP_TAU. THAT MIGHT FUCK THINGS UP
+    // WHEN IT COMES TO FITTING
+    if (rainfall_relationship == "exponentially_weighted") {
+
+      double temp_tau = tau_with_dt;
+      double rFsum = 0.0;
+      double calc;
+
+      for (int r = 0; r <= t; r++) {
+
+        calc = (-(t - r))/temp_tau;
+        rFsum = rFsum + exp(calc) * rF[r];
+
+      }
+
+      K = (1.0 / (temp_tau * (1 - exp(-(t + 1) / temp_tau)))) * rFsum;
       koutput[t] = K;
 
     }
 
-    else {
-
-      std::vector<double>::const_iterator first = rF.begin() + t - tau_with_dt;
-      std::vector<double>::const_iterator last = rF.begin() + t;
-      std::vector<double> rFx(first, last);
-      rFsum = std::accumulate(rFx.begin(), rFx.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
-      K = (1.0 + ((1.0 / tau_with_dt) * rFsum));
-
-      koutput[t] = K;
-
-    }
 
     // Setting the density dependent function regulating larval mortality
     if (mortality_density_function == "power") {

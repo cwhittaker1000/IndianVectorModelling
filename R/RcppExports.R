@@ -41,7 +41,19 @@ mosquito_population_model <- function(start_time, end, fitted_parameters, static
     .Call('_IndianVectorModelling_mosquito_population_model', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function)
 }
 
+#' Multivariate Normal Sampler
+#'
+#' Random number generation for a multivariate normal (Gaussian) distribution. Uses a Cholesky
+#' decomposition to propose new values from a multivariate normal distribution with a given mean
+#' vector (mu) and a specified covariance matrix (sigma).
+#'
+#' Note: Currently (for my own modelling purposes) won't return values < 0.
+#'
+#' @param mu Mean of the multivariate normal distribution (has to be specified as a matrix with
+#' 1 row and number of columns equal to the number of variables in the multivariate distribution e.g. 2 for bivariate)
+#' @param sigma A covariance matrix associated with mu
 #' @export
+#'
 mvrnormArma <- function(mu, sigma) {
     .Call('_IndianVectorModelling_mvrnormArma', PACKAGE = 'IndianVectorModelling', mu, sigma)
 }
@@ -87,7 +99,7 @@ runMCMC_seq_props <- function(start_sd_adaptation, end_sd_adaptation, acceptance
 }
 
 #' @export
-testerr <- function(start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn) {
-    .Call('_IndianVectorModelling_testerr', PACKAGE = 'IndianVectorModelling', start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, N, rainfall, obsData, number_of_datapoints, data_timeframe, density_function, prior_choice, fitted_yn)
+tester_mosquito_population_model <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship) {
+    .Call('_IndianVectorModelling_tester_mosquito_population_model', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship)
 }
 

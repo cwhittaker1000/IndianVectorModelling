@@ -81,10 +81,10 @@ double prior_seq_proposals(Rcpp::NumericVector parameter_values, Rcpp::String pr
       res = res + R::dnorm4(parameter_values["beta"], 15, 7, TRUE); //beta
     }
     if (fitted_yn["overdisp"]) {
-      res = res + R::dunif(parameter_values["overdisp"], 0.001, 10, TRUE); //overdispersion DECIDE WHETHER TO HAVE THIS NORMAL DIST
+      res = res + R::dnorm4(parameter_values["overdisp"], 1, 0.5, TRUE); //overdispersion DECIDE WHETHER TO HAVE THIS NORMAL DIST
     }
     if (fitted_yn["pop_frac"]) {
-      res = res + R::dunif(parameter_values["pop_frac"], 0.001, 1, TRUE); //pop_frac DECIDE WHETHER TO HAVE THIS NORMAL DIST
+      res = res + R::dnorm4(parameter_values["pop_frac"], 0.05, 0.05, TRUE); //pop_frac DECIDE WHETHER TO HAVE THIS NORMAL DIST
     }
   }
 
