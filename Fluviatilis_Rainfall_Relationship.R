@@ -99,6 +99,26 @@ plot(timepoints, fluv, xlim = c(0, 3500), axes = F, ylab = "", xlab = "")
 par(new = T)
 plot(average, type = "l")
 
+# Cumulative Rainfall
+tau <- 200
+cumulative <- c()
+for (i in 1:length(rainfall)) {
+  if (i <= tau) {
+    rainfall_selection <- rainfall[1:i]
+    cumulative[i] <- 200 * (sum(rainfall_selection)/i)
+  }
+  else {
+    rainfall_selection <- rainfall[(i-tau) : i]
+    cumulative[i] <- sum(rainfall_selection)
+  }
+}
+plot(timepoints, fluv, xlim = c(0, 3500), axes = F, ylab = "", xlab = "")
+par(new = T)
+plot(cumulative, type = "l")
+par(new = T)
+plot(average, type = "l", col = "red", axes = F)
+axis(side = 4)
+
 # Average Rainfall and Washout Threshold - No Decline Post-Washout Cessation
 for (i in 1:length(rainfall)) {
   if (i <= tau) {
