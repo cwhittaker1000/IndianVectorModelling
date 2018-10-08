@@ -1,3 +1,0 @@
-^.*\.Rproj$      # Automatically added by RStudio
-^\.Rproj\.user$  # Used for temporary files
-^data-raw$
