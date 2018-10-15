@@ -6,9 +6,9 @@
 
 using namespace Rcpp;
 
-// mosquito_population_model_fluv
-Rcpp::List mosquito_population_model_fluv(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect);
-RcppExport SEXP _IndianVectorModelling_mosquito_population_model_fluv(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP) {
+// mosquito_population_model_ann
+Rcpp::List mosquito_population_model_ann(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect);
+RcppExport SEXP _IndianVectorModelling_mosquito_population_model_ann(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,7 +20,62 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
-    rcpp_result_gen = Rcpp::wrap(mosquito_population_model_fluv(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect));
+    rcpp_result_gen = Rcpp::wrap(mosquito_population_model_ann(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mosquito_population_model_cul
+Rcpp::List mosquito_population_model_cul(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect);
+RcppExport SEXP _IndianVectorModelling_mosquito_population_model_cul(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
+    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
+    rcpp_result_gen = Rcpp::wrap(mosquito_population_model_cul(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mosquito_population_model_fluv
+Rcpp::List mosquito_population_model_fluv(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String decline_type);
+RcppExport SEXP _IndianVectorModelling_mosquito_population_model_fluv(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP decline_typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
+    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type decline_type(decline_typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(mosquito_population_model_fluv(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type));
+    return rcpp_result_gen;
+END_RCPP
+}
+// general_mosquito_population_model
+Rcpp::List general_mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String decline_type, Rcpp::String rainfall_effect);
+RcppExport SEXP _IndianVectorModelling_general_mosquito_population_model(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP decline_typeSEXP, SEXP rainfall_effectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
+    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type decline_type(decline_typeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
+    rcpp_result_gen = Rcpp::wrap(general_mosquito_population_model(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type, rainfall_effect));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -334,7 +389,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_IndianVectorModelling_mosquito_population_model_ann", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model_ann, 8},
+    {"_IndianVectorModelling_mosquito_population_model_cul", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model_cul, 8},
     {"_IndianVectorModelling_mosquito_population_model_fluv", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model_fluv, 8},
+    {"_IndianVectorModelling_general_mosquito_population_model", (DL_FUNC) &_IndianVectorModelling_general_mosquito_population_model, 9},
     {"_IndianVectorModelling_Hill_Function", (DL_FUNC) &_IndianVectorModelling_Hill_Function, 4},
     {"_IndianVectorModelling_test_initial_state_sample", (DL_FUNC) &_IndianVectorModelling_test_initial_state_sample, 4},
     {"_IndianVectorModelling_prior", (DL_FUNC) &_IndianVectorModelling_prior, 4},

@@ -2,8 +2,23 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-mosquito_population_model_fluv <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect) {
-    .Call('_IndianVectorModelling_mosquito_population_model_fluv', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect)
+mosquito_population_model_ann <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect) {
+    .Call('_IndianVectorModelling_mosquito_population_model_ann', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect)
+}
+
+#' @export
+mosquito_population_model_cul <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect) {
+    .Call('_IndianVectorModelling_mosquito_population_model_cul', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect)
+}
+
+#' @export
+mosquito_population_model_fluv <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type) {
+    .Call('_IndianVectorModelling_mosquito_population_model_fluv', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type)
+}
+
+#' @export
+general_mosquito_population_model <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type, rainfall_effect) {
+    .Call('_IndianVectorModelling_general_mosquito_population_model', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type, rainfall_effect)
 }
 
 #' @export

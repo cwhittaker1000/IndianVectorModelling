@@ -34,7 +34,7 @@ for (i in 1:length(rainfall)) {
       marker <- 0
     }
     else {
-      K[i] <- Kmax
+      K[i] <- 0
     }
   }
 
@@ -72,14 +72,9 @@ plot(seq(0, 3500, 1), rep(5, 3501), type = "l", col = "red", ylim = c(0, 20), lw
 par(new = T)
 plot(average, type = "l", col = "black", lwd = 1, ylim = c(0, 20), xlab = "", ylab = "")
 par(new = T)
-plot(K, type = "l", ylim = c(0, 20), xlab = "", ylab = "")
+plot(K, type = "l", ylim = c(0, 20), xlab = "", ylab = "", col = "purple", lwd = 2)
 par(new = T)
 plot(timepoints, fluv, xlim = c(0, 3500), axes = F, ylab = "", xlab = "", pch = 20, col = "dark grey", cex = 3)
-
-
-
-
-
 
 
 ### Miscellaneous Code ###

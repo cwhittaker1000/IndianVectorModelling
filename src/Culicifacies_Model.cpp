@@ -6,12 +6,12 @@
 
 //' @export
 // [[Rcpp::export]]
-Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters,
-                                     Rcpp::NumericVector static_parameters,
-                                     std::vector<double> rainfall,
-                                     Rcpp::String mortality_density_function,
-                                     Rcpp::String rainfall_relationship,
-                                     Rcpp::String rainfall_effect) {
+Rcpp::List mosquito_population_model_cul(int start_time, int end, Rcpp::NumericVector fitted_parameters,
+                                         Rcpp::NumericVector static_parameters,
+                                         std::vector<double> rainfall,
+                                         Rcpp::String mortality_density_function,
+                                         Rcpp::String rainfall_relationship,
+                                         Rcpp::String rainfall_effect) {
 
   // Setting the Start and Endtime
   int t = start_time;
@@ -114,7 +114,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
 
         if (rainfall_effect == "raw") {
 
-         double rFsum = 0.0;
+          double rFsum = 0.0;
           for (int r = 0; r <= t; r++) {
             rFsum = rFsum + ((r + 1) * rF[r]);
           }
@@ -211,7 +211,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           std::vector<double>::const_iterator last = rF.begin() + t;
           std::vector<double> rFx(first, last);
           rFsum = std::accumulate(rFx.begin(), rFx.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
-          K = scaling_factor * (1.0 + ((1.0 / tau_with_dt) * rFsum));
+          K = scaling_factor * ((1.0 / tau_with_dt) * rFsum);
 
           k_rain_output[t] = K;
           k_total_output[t] = K + K_static;
@@ -225,7 +225,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           std::vector<double> rFx(first, last);
           rFsum = std::accumulate(rFx.begin(), rFx.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
 
-          double mean_rainfall = 1.0 + ((1.0 / tau_with_dt) * rFsum);
+          double mean_rainfall = ((1.0 / tau_with_dt) * rFsum);
           double hill_output = Hill_Function(mean_rainfall, K_max, hill_1, hill_2);
           K = scaling_factor * hill_output;
 

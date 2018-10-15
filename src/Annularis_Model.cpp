@@ -6,12 +6,12 @@
 
 //' @export
 // [[Rcpp::export]]
-Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters,
-                                     Rcpp::NumericVector static_parameters,
-                                     std::vector<double> rainfall,
-                                     Rcpp::String mortality_density_function,
-                                     Rcpp::String rainfall_relationship,
-                                     Rcpp::String rainfall_effect) {
+Rcpp::List mosquito_population_model_ann(int start_time, int end, Rcpp::NumericVector fitted_parameters,
+                                         Rcpp::NumericVector static_parameters,
+                                         std::vector<double> rainfall,
+                                         Rcpp::String mortality_density_function,
+                                         Rcpp::String rainfall_relationship,
+                                         Rcpp::String rainfall_effect) {
 
   // Setting the Start and Endtime
   int t = start_time;
@@ -21,7 +21,12 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
   double dE = 1/fitted_parameters[0]; double dL = 1/fitted_parameters[1]; double dP = 1/fitted_parameters[2]; double muE0 = fitted_parameters[3];
   double muL0 = fitted_parameters[4]; double muP = fitted_parameters[5]; double muM = fitted_parameters[6];
   double lambda = fitted_parameters[7]; double tau = fitted_parameters[8]; double beta = fitted_parameters[9];
-  double scaling_factor = fitted_parameters[12]; double K_max = fitted_parameters[15]; double hill_1 = fitted_parameters[16]; double hill_2 = fitted_parameters[17];
+  double scaling_factor = fitted_parameters[12];
+
+  // Parameters Related to the Hill Function, Positive Influence of K On Carrying Capacity
+  double K_Max_Hill_Rainfall = fitted_parameters[15];
+  double Hill_Rainfall_1 = fitted_parameters[16];
+  double Hill_Rainfall_2 = fitted_parameters[17];
 
   // Setting the Static Parameters
   double dt = static_parameters[0];
@@ -90,7 +95,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
 
           if (t == 0) {
 
-            double hill_output = Hill_Function(rainfall[t], K_max, hill_1, hill_2);
+            double hill_output = Hill_Function(rainfall[t], K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
             K = scaling_factor * hill_output;
 
           }
@@ -98,7 +103,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           else {
 
             double mean_rainfall = (1.0 / t) * rFsum_fudge;
-            double hill_output = Hill_Function(mean_rainfall, K_max, hill_1, hill_2);
+            double hill_output = Hill_Function(mean_rainfall, K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
             K = scaling_factor * hill_output;
 
           }
@@ -114,7 +119,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
 
         if (rainfall_effect == "raw") {
 
-         double rFsum = 0.0;
+          double rFsum = 0.0;
           for (int r = 0; r <= t; r++) {
             rFsum = rFsum + ((r + 1) * rF[r]);
           }
@@ -140,14 +145,14 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           }
 
           if (t == 0) {
-            double hill_output = Hill_Function(rF[t], K_max, hill_1, hill_2);
+            double hill_output = Hill_Function(rF[t], K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
             K = scaling_factor * hill_output;
           }
           else { // NOTE NEED TO SORT THIS OUT STILL.
-            double hill_output = Hill_Function(rF[t], K_max, hill_1, hill_2);
+            double hill_output = Hill_Function(rF[t], K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
             K = scaling_factor * hill_output;
             // double linearly_weighted_rainfall = ((2.0 / pow(t + 1, 2)) * rFsum);
-            // double hill_output = Hill_Function(linearly_weighted_rainfall, K_max, hill_1, hill_2);
+            // double hill_output = Hill_Function(linearly_weighted_rainfall, K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
             // K = scaling_factor * hill_output;
           }
 
@@ -192,7 +197,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           }
 
           double mean_rainfall = (1.0 / (temp_tau * (1 - exp(-(t + 1) / temp_tau)))) * rFsum;
-          double hill_output = Hill_Function(mean_rainfall, K_max, hill_1, hill_2);
+          double hill_output = Hill_Function(mean_rainfall, K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
           K = scaling_factor * hill_output;
           k_rain_output[t] = K;
           k_total_output[t] = K + K_static;
@@ -211,7 +216,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           std::vector<double>::const_iterator last = rF.begin() + t;
           std::vector<double> rFx(first, last);
           rFsum = std::accumulate(rFx.begin(), rFx.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
-          K = scaling_factor * (1.0 + ((1.0 / tau_with_dt) * rFsum));
+          K = scaling_factor * ((1.0 / tau_with_dt) * rFsum);
 
           k_rain_output[t] = K;
           k_total_output[t] = K + K_static;
@@ -225,8 +230,8 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           std::vector<double> rFx(first, last);
           rFsum = std::accumulate(rFx.begin(), rFx.end(), 0.0); // Don't forget to do 0.0!!! Otherwise accumulator will produce an int!!
 
-          double mean_rainfall = 1.0 + ((1.0 / tau_with_dt) * rFsum);
-          double hill_output = Hill_Function(mean_rainfall, K_max, hill_1, hill_2);
+          double mean_rainfall = ((1.0 / tau_with_dt) * rFsum);
+          double hill_output = Hill_Function(mean_rainfall, K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
           K = scaling_factor * hill_output;
 
           k_rain_output[t] = K;
@@ -279,7 +284,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           }
 
           double mean_rainfall = ((2.0 / pow(tau_with_dt, 2)) * rFsum);
-          double hill_output = Hill_Function(mean_rainfall, K_max, hill_1, hill_2);
+          double hill_output = Hill_Function(mean_rainfall, K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
           K = scaling_factor * hill_output;
 
           k_rain_output[t] = K;
@@ -323,7 +328,7 @@ Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVecto
           }
 
           double mean_rainfall = (1.0 / (temp_tau * (1 - exp(-(t + 1) / temp_tau)))) * rFsum;
-          double hill_output = Hill_Function(mean_rainfall, K_max, hill_1, hill_2);
+          double hill_output = Hill_Function(mean_rainfall, K_Max_Hill_Rainfall, Hill_Rainfall_1, Hill_Rainfall_2);
           K = scaling_factor * hill_output;
 
           k_rain_output[t] = K;
