@@ -25,6 +25,13 @@
 Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters,
                                      Rcpp::NumericVector static_parameters, std::vector<double> rainfall,
                                      Rcpp::String density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect);
+Rcpp::List general_mosquito_population_model(int start_time, int end,
+                                             Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters,
+                                             std::vector<double> rainfall,
+                                             Rcpp::String mortality_density_function,
+                                             Rcpp::String rainfall_relationship,
+                                             Rcpp::String rainfall_effect,
+                                             Rcpp::String decline_type);
 
 
 #endif

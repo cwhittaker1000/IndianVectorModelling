@@ -4,22 +4,23 @@
 
 //' @export
 // [[Rcpp::export]]
-Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covariance matrix adaptation
+Rcpp::List runMCMC_joint_props(int N, // Number of particles,
+                               int start_sd_adaptation, // Time to start covariance matrix adaptation
                                int end_sd_adaptation, // Time to stop covariance matrix adaptation
                                int number_of_iterations, // Number of MCMC iterations
                                std::vector <double> initial_sds, // Initial SDs to fill the covariance matrix diag with
                                Rcpp::NumericVector model_parameters, // Variable model parameter values - can be fitted
                                Rcpp::NumericVector static_parameters, // Static model parameter values - not fitted
-                               int N, // Number of particles
+                               Rcpp::LogicalVector fitted_yn, // Which parameters to be fitted
                                std::vector <double> rainfall, // Rainfall recorded
                                std::vector <int> obsData, // Observed data
-                               Rcpp::String density_function, // Density function regulating mortality
-                               Rcpp::String prior_choice, // Prior choice
-                               Rcpp::LogicalVector fitted_yn, // Which parameters to be fitted
-                               double sampling_point,
-                               Rcpp::StringVector month_vector,
+                               Rcpp::String mortality_density_function, // Density function regulating mortality
                                Rcpp::String rainfall_relationship,
                                Rcpp::String rainfall_effect,
+                               Rcpp::String decline_type,
+                               double sampling_point,
+                               Rcpp::StringVector offset_month_vector,
+                               Rcpp::StringVector sampling_month_vector,
                                Rcpp::String likelihood_choice,
                                int print_output) {
 
@@ -103,22 +104,26 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
 
   // Calculating the posterior likelihood for the initial parameter values
   double current_posterior_likelihood = posterior_joint_proposals(N, rainfall, obsData,
-                                                                  model_parameters, static_parameters, density_function,
-                                                                  prior_choice, fitted_yn, sampling_point, month_vector,
-                                                                  rainfall_relationship, rainfall_effect, likelihood_choice); // whole bunch of inputs here, see if I can streamline this
-
+                                                                  model_parameters, static_parameters, fitted_yn,
+                                                                  mortality_density_function, rainfall_relationship, rainfall_effect, decline_type,
+                                                                  sampling_point, offset_month_vector, sampling_month_vector,
+                                                                  likelihood_choice); // whole bunch of inputs here, see if I can streamline this
 
   // Creating a vector to store and sequentially update model parameters as the MCMC iterates
-  Rcpp::NumericVector model_parameters_for_MCMC(22);
+  Rcpp::NumericVector model_parameters_for_MCMC(29);
+
+  // Actual Model Parameters - See General_Mosquito_Model for Description of Which Parameter is at Which Position
   model_parameters_for_MCMC[0] = model_parameters[0]; model_parameters_for_MCMC[1] = model_parameters[1]; model_parameters_for_MCMC[2] = model_parameters[2];
   model_parameters_for_MCMC[3] = model_parameters[3]; model_parameters_for_MCMC[4] = model_parameters[4]; model_parameters_for_MCMC[5] = model_parameters[5];
   model_parameters_for_MCMC[6] = model_parameters[6]; model_parameters_for_MCMC[7] = model_parameters[7]; model_parameters_for_MCMC[8] = model_parameters[8];
-  model_parameters_for_MCMC[9] = model_parameters[9]; model_parameters_for_MCMC[10] = model_parameters[10];
-  model_parameters_for_MCMC[11] = model_parameters[11]; model_parameters_for_MCMC[12] = model_parameters[12];
-  model_parameters_for_MCMC[13] = model_parameters[13]; model_parameters_for_MCMC[14] = model_parameters[14];
-  model_parameters_for_MCMC[15] = model_parameters[15]; model_parameters_for_MCMC[16] = model_parameters[16];
-  model_parameters_for_MCMC[17] = model_parameters[17]; model_parameters_for_MCMC[18] = 0;
-  model_parameters_for_MCMC[19] = 0; model_parameters_for_MCMC[20] = 0; model_parameters_for_MCMC[21] = 0;
+  model_parameters_for_MCMC[9] = model_parameters[9]; model_parameters_for_MCMC[10] = model_parameters[10]; model_parameters_for_MCMC[11] = model_parameters[11];
+  model_parameters_for_MCMC[12] = model_parameters[12]; model_parameters_for_MCMC[13] = model_parameters[13]; model_parameters_for_MCMC[14] = model_parameters[14];
+  model_parameters_for_MCMC[15] = model_parameters[15]; model_parameters_for_MCMC[16] = model_parameters[16]; model_parameters_for_MCMC[17] = model_parameters[17];
+  model_parameters_for_MCMC[18] = model_parameters[18]; model_parameters_for_MCMC[19] = model_parameters[19]; model_parameters_for_MCMC[20] = model_parameters[20];
+  model_parameters_for_MCMC[21] = model_parameters[21]; model_parameters_for_MCMC[22] = model_parameters[22]; model_parameters_for_MCMC[23] = model_parameters[23];
+
+  // E, L, P, M and Offset - these values are calculated within the Particle Filter function and the Values Added In There. 0 is just a placeholder!
+  model_parameters_for_MCMC[24] = 0; model_parameters_for_MCMC[25] = 0; model_parameters_for_MCMC[26] = 0; model_parameters_for_MCMC[27] = 0; model_parameters_for_MCMC[28] = 0;
 
   // Rcpp::NumericVector model_parameters_for_MCMC = Rcpp::NumericVector::create(Rcpp::Named("dE") = model_parameters[0], Rcpp::Named("dL") = model_parameters[1],
   //                                                                             Rcpp::Named("dP") = model_parameters[2], Rcpp::Named("muE0") = model_parameters[3],
@@ -164,20 +169,18 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
     }
 
     // This might be superfluous
-    Rcpp::StringVector names(22);
-    names[0] = "dE"; names[1] = "dL"; names[2] = "dP"; names[3] = "muE0"; names[4] = "muL0";
-    names[5] = "muP"; names[6] = "muM"; names[7] = "lambda"; names[8] = "tau"; names[9] = "beta";
-    names[10] = "overdisp"; names[11] = "pop_frac"; names[12] = "scaling_factor"; names[13] = "z";
-    names[14] = "K_static"; names[15] = "K_max"; names[16] = "hill_1"; names[17] = "hill_2";
-    names[18] = "E"; names[19] = "L"; names[20] = "P"; names[21] = "M";
-
+    Rcpp::StringVector names(29);
+    names[0] = "dE"; names[1] = "dL"; names[2] = "dP"; names[3] = "muE0"; names[4] = "muL0"; names[5] = "muP"; names[6] = "muM";
+    names[7] = "lambda"; names[8] = "beta"; names[9] = "overdisp"; names[10] = "pop_frac"; names[11] = "z";
+    names[12] = "tau_rainfall"; names[13] = "scaling_factor_rainfall"; names[14] = "K_Max_Rain"; names[15] = "Hill_Rainfall_1"; names[16] = "Hill_Rainfall_2";
+    names[17] = "tau_static"; names[18] = "scaling_factor_static"; names[19] = "K_Max_Static"; names[20] = "Washout_Threshold"; names[21] = "washout_exp_scaling_factor";
+    names[22] = "washout_hill_one"; names[23] = "washout_hill_two";
+    names[24] = "E"; names[25] = "L"; names[26] = "P"; names[27] = "M";
+    names[28] = "offset";
     model_parameters_for_MCMC.names() = names;
 
-    // model_parameters_for_MCMC.names() = Rcpp::StringVector::create("dE", "dL", "dP", "muE0", "muL0", "muP", "muM", "lambda", "tau", "beta", "overdisp",
-    //                                                                "pop_frac", "scaling_factor", "z", "K_static", "K_max", "hill_1", "hill_2",
-    //                                                                "E", "L", "P", "M");
-
     // Manually handling instances when proposed overdispersion value is less than or equal to 0
+    // DOUBLE CHECKED AND FAIRLY CERTAIN THE BELOW ISSUE IS SOLVED :)
     // CURRENTLY THIS CHANGES THE MODEL INPUT BUT DOESN'T CHANGE WHAT GETS ADDED TO THE MCMC OUTPUT
     // IF THE PROPOSED VALUE IS ACCEPTED- THAT IS STILL WHAT WAS INITIALLY PROPOSED AND CONTAINED
     // WITHIN "PROPOSED_PARAMETERS". THINK THE SOLUTION IS TO USE INDEXER AND ADD TO MCMC_OUTPUT
@@ -224,9 +227,11 @@ Rcpp::List runMCMC_joint_props(int start_sd_adaptation, // Time to start covaria
 
     // Assessing the likelihood of the proposed parameter value compared to the current parameter value
     double proposed_posterior_likelihood = posterior_joint_proposals(N, rainfall, obsData,
-                                                                     model_parameters_for_MCMC, static_parameters,
-                                                                     density_function, prior_choice, fitted_yn, sampling_point, month_vector,
-                                                                     rainfall_relationship, rainfall_effect, likelihood_choice);
+                                                                     model_parameters_for_MCMC, static_parameters, fitted_yn,
+                                                                     mortality_density_function, rainfall_relationship, rainfall_effect, decline_type,
+                                                                     sampling_point, offset_month_vector, sampling_month_vector,
+                                                                     likelihood_choice);
+
     double likelihood_ratio = exp(proposed_posterior_likelihood - current_posterior_likelihood);
 
     // Deciding whether to accept or reject, updating chain and current_posterior_likelihood as appropriate

@@ -8,7 +8,6 @@
 // Functions Contained Within File mosquito_population_model.cpp
 std::vector <int> test_initial_state_sample(Rcpp::NumericVector fitted_parameters,
                                             Rcpp::NumericVector static_parameters,
-                                            Rcpp::String mortality_density_function,
-                                            double initial_K);
+                                            Rcpp::String mortality_density_function);
 
 #endif

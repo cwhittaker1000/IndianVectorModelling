@@ -14,23 +14,13 @@
 // [[Rcpp::export]]
 double min_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData,
                                   Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters,
-                                  Rcpp::String density_function, double sampling_point, Rcpp::StringVector month_vector, Rcpp::String rainfall_relationship,
-                                  Rcpp::String rainfall_effect, Rcpp::String likelihood_choice) {
+                                  Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship,
+                                  Rcpp::String rainfall_effect, Rcpp::String decline_type,
+                                  double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice) {
+
+  // Initialising Number of Datapoints and the Initial States Vector
   int number_of_datapoints = obsData.size();
-  double initial_K;
-
-  // Specifying the INITIAL VALUES E, L, P and M and generating the PARTICLES
-  if (rainfall_effect == "raw") {
-    initial_K = rainfall[0] * fitted_parameters[12]; //fitted_parameters[12] is the scaling factor. Need to check this is alright- think it's only okay for the linear relationship with rainfall; will need to change when I add in other relationships with rainfall
-  }
-  else if (rainfall_effect == "hill") {
-    double rainfall_hill = Hill_Function(rainfall[0], fitted_parameters[15], fitted_parameters[16], fitted_parameters[17]);
-    initial_K = rainfall_hill * fitted_parameters[12];
-  }
-
-  //Rcpp::Rcout << "Initial K is " << initial_K << std::endl;
-
-  std::vector <int> initial_states = test_initial_state_sample(fitted_parameters, static_parameters, density_function, initial_K);
+  std::vector <int> initial_states = test_initial_state_sample(fitted_parameters, static_parameters, mortality_density_function);
 
   // Filling the particles vector with the initial states
   boost::numeric::ublas::matrix <int> particles(N, 4);
@@ -40,6 +30,25 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
     particles(x, 2) = initial_states[2];
     particles(x, 3) = initial_states[3];
   }
+
+  // Calculating the Size/Value of the Offset Term and Inputting Its Value Into the Fitted Parameters Vector
+  int offset = 0;
+  for(int o = 0; o <  offset_month_vector.size(); o++) {
+    if (sampling_month_vector[o] == "January" | sampling_month_vector[o] == "March" | sampling_month_vector[o] == "May" | sampling_month_vector[o] == "July" | sampling_month_vector[o] == "August" | sampling_month_vector[o] == "October" | sampling_month_vector[o] == "December") {
+      offset = offset + (31 / static_parameters[0]);
+    }
+
+    else if(sampling_month_vector[o] == "April" | sampling_month_vector[o] == "June" | sampling_month_vector[o] == "September" | sampling_month_vector[o] == "November") {
+      offset = offset + (30 / static_parameters[0]);
+    }
+
+    else if(sampling_month_vector[o] == "February") {
+      offset = offset + (28 / static_parameters[0]);
+    }
+
+  }
+  Rcpp::Rcout << "The offset is " << offset << std::endl;
+  fitted_parameters[28] = offset;
 
   // Specifying the TIMEPOINTS to run the model between
   //    - RETURNS A VECTOR LENGTH #TIMEPOINTS + 1, DON'T FORGET THE +1 - E.G. 20 DATAPOINTS = 21 TIMEPOINTS TO RUN MODEL BETWEEN
@@ -52,15 +61,15 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
 
     else if (p == 1) {
 
-      if (month_vector[p - 1] == "January" | month_vector[p - 1] == "March" | month_vector[p - 1] == "May" | month_vector[p - 1] == "July" | month_vector[p - 1] == "August" | month_vector[p - 1] == "October" | month_vector[p - 1] == "December") {
+      if (sampling_month_vector[p - 1] == "January" | sampling_month_vector[p - 1] == "March" | sampling_month_vector[p - 1] == "May" | sampling_month_vector[p - 1] == "July" | sampling_month_vector[p - 1] == "August" | sampling_month_vector[p - 1] == "October" | sampling_month_vector[p - 1] == "December") {
         timepoints[p] =  round(sampling_point * (31 / static_parameters[0]));
       }
 
-      else if(month_vector[p - 1] == "April" | month_vector[p - 1] == "June" | month_vector[p - 1] == "September" | month_vector[p - 1] == "November") {
+      else if(sampling_month_vector[p - 1] == "April" | sampling_month_vector[p - 1] == "June" | sampling_month_vector[p - 1] == "September" | sampling_month_vector[p - 1] == "November") {
         timepoints[p] =  round(sampling_point * (30 / static_parameters[0]));
       }
 
-      else if(month_vector[p - 1] == "February") {
+      else if(sampling_month_vector[p - 1] == "February") {
         timepoints[p] =  round(sampling_point * (28 / static_parameters[0]));
       }
 
@@ -68,15 +77,15 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
 
     else if (p > 1) {
 
-      if (month_vector[p - 1] == "January" | month_vector[p - 1] == "March" | month_vector[p - 1] == "May" | month_vector[p - 1] == "July" | month_vector[p - 1] == "August" | month_vector[p - 1] == "October" | month_vector[p - 1] == "December") {
+      if (sampling_month_vector[p - 1] == "January" | sampling_month_vector[p - 1] == "March" | sampling_month_vector[p - 1] == "May" | sampling_month_vector[p - 1] == "July" | sampling_month_vector[p - 1] == "August" | sampling_month_vector[p - 1] == "October" | sampling_month_vector[p - 1] == "December") {
         timepoints[p] = timepoints[p - 1] + 31 / static_parameters[0];
       }
 
-      else if(month_vector[p - 1] == "April" | month_vector[p - 1] == "June" | month_vector[p - 1] == "September" | month_vector[p - 1] == "November") {
+      else if(sampling_month_vector[p - 1] == "April" | sampling_month_vector[p - 1] == "June" | sampling_month_vector[p - 1] == "September" | sampling_month_vector[p - 1] == "November") {
         timepoints[p] = timepoints[p - 1] + 30 / static_parameters[0];
       }
 
-      else if(month_vector[p - 1] == "February") {
+      else if(sampling_month_vector[p - 1] == "February") {
         timepoints[p] = timepoints[p - 1] + 28 / static_parameters[0];
       }
     }
@@ -98,13 +107,13 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
     for (int j = 0; j < N; j++) {
 
       // Initialising E0, L0, P0 and M0
-      fitted_parameters[18] = particles(j, 0); // E  // need to make sure this is doing what I want it to!
-      fitted_parameters[19] = particles(j, 1); // L
-      fitted_parameters[20] = particles(j, 2); // P
-      fitted_parameters[21] = particles(j, 3); // M
+      fitted_parameters[24] = particles(j, 0); // E  // need to make sure this is doing what I want it to!
+      fitted_parameters[25] = particles(j, 1); // L
+      fitted_parameters[26] = particles(j, 2); // P
+      fitted_parameters[27] = particles(j, 3); // M
 
       // RUNS THE MODEL for a SINGLE PARTICLE between the TWO TIMEPOINTS
-      Rcpp::List particle_output = mosquito_population_model(timepoints[i], timepoints[i + 1], fitted_parameters, static_parameters, rainfall, density_function, rainfall_relationship, rainfall_effect);
+      Rcpp::List particle_output = general_mosquito_population_model(timepoints[i], timepoints[i + 1], fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type);
 
       // Extracts the FULL OUTPUT for each compartment for that particle
       Rcpp::NumericVector E_output = particle_output["E_Output"];
@@ -122,10 +131,10 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
       double current_M = final_output_particles_before_weighting(j, 3);
 
       if (likelihood_choice == "poisson") {
-        particle_weights[j] = Poisson(obsData[i], current_M, fitted_parameters[11]);
+        particle_weights[j] = Poisson(obsData[i], current_M, fitted_parameters[10]);
       }
       else if (likelihood_choice == "negative binomial") {
-        particle_weights[j] = Negative_Binomial(obsData[i], current_M, fitted_parameters[10], fitted_parameters[11]); // double check I've got the overdispersion and population fraction the right way around!!
+        particle_weights[j] = Negative_Binomial(obsData[i], current_M, fitted_parameters[9], fitted_parameters[10]); // double check I've got the overdispersion and population fraction the right way around!!
       }
 
     }
@@ -161,33 +170,40 @@ double min_output_particle_filter(int N, std::vector <double> rainfall, std::vec
 // [[Rcpp::export]]
 Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData,
                                        Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters,
-                                       Rcpp::String density_function, double sampling_point, Rcpp::StringVector month_vector,
-                                       Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String likelihood_choice) {
+                                       Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship,
+                                       Rcpp::String rainfall_effect, Rcpp::String decline_type,
+                                       double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice) {
 
+  // Initialising Number of Datapoints and the Initial States Vector
   int number_of_datapoints = obsData.size();
-    // Specifying the INITIAL VALUES E, L, P and M and generating the PARTICLES
-  double initial_K;
-  // Specifying the INITIAL VALUES E, L, P and M and generating the PARTICLES
-  if (rainfall_effect == "raw") {
-    initial_K = rainfall[0] * fitted_parameters[12]; //fitted_parameters[12] is the scaling factor. Need to check this is alright- think it's only okay for the linear relationship with rainfall; will need to change when I add in other relationships with rainfall
-  }
-  else if (rainfall_effect == "hill") {
-    double rainfall_hill = Hill_Function(rainfall[0], fitted_parameters[15], fitted_parameters[16], fitted_parameters[17]);
-    initial_K = rainfall_hill * fitted_parameters[12];
-  }
-
-  //Rcpp::Rcout << "Initial K is " << initial_K << std::endl;
-
-  std::vector <int> initial_states = test_initial_state_sample(fitted_parameters, static_parameters, density_function, initial_K);
-  Rcpp::NumericMatrix particles(N, 4);
+  std::vector <int> initial_states = test_initial_state_sample(fitted_parameters, static_parameters, mortality_density_function);
 
   // Filling the particles vector with the initial states
+  Rcpp::NumericMatrix particles(N, 4);
   for (int x = 0; x < N; x++) {
     particles(x, 0) = initial_states[0];
     particles(x, 1) = initial_states[1];
     particles(x, 2) = initial_states[2];
     particles(x, 3) = initial_states[3];
   }
+
+  // Calculating the Size/Value of the Offset Term
+  int offset = 0;
+  for(int o = 0; o <  offset_month_vector.size(); o++) {
+    if (sampling_month_vector[o] == "January" | sampling_month_vector[o] == "March" | sampling_month_vector[o] == "May" | sampling_month_vector[o] == "July" | sampling_month_vector[o] == "August" | sampling_month_vector[o] == "October" | sampling_month_vector[o] == "December") {
+      offset = offset + (31 / static_parameters[0]);
+    }
+
+    else if(sampling_month_vector[o] == "April" | sampling_month_vector[o] == "June" | sampling_month_vector[o] == "September" | sampling_month_vector[o] == "November") {
+      offset = offset + (30 / static_parameters[0]);
+    }
+
+    else if(sampling_month_vector[o] == "February") {
+      offset = offset + (28 / static_parameters[0]);
+    }
+
+  }
+  Rcpp::Rcout << "The offset is " << offset << std::endl;
 
   // Specifying the TIMEPOINTS to run the model between
   //    - RETURNS A VECTOR LENGTH #TIMEPOINTS + 1, DON'T FORGET THE +1 - E.G. 20 DATAPOINTS = 21 TIMEPOINTS TO RUN MODEL BETWEEN
@@ -200,15 +216,15 @@ Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std
 
     else if (p == 1) {
 
-      if (month_vector[p - 1] == "January" | month_vector[p - 1] == "March" | month_vector[p - 1] == "May" | month_vector[p - 1] == "July" | month_vector[p - 1] == "August" | month_vector[p - 1] == "October" | month_vector[p - 1] == "December") {
+      if (sampling_month_vector[p - 1] == "January" | sampling_month_vector[p - 1] == "March" | sampling_month_vector[p - 1] == "May" | sampling_month_vector[p - 1] == "July" | sampling_month_vector[p - 1] == "August" | sampling_month_vector[p - 1] == "October" | sampling_month_vector[p - 1] == "December") {
         timepoints[p] =  round(sampling_point * (31 / static_parameters[0]));
       }
 
-      else if(month_vector[p - 1] == "April" | month_vector[p - 1] == "June" | month_vector[p - 1] == "September" | month_vector[p - 1] == "November") {
+      else if(sampling_month_vector[p - 1] == "April" | sampling_month_vector[p - 1] == "June" | sampling_month_vector[p - 1] == "September" | sampling_month_vector[p - 1] == "November") {
         timepoints[p] =  round(sampling_point * (30 / static_parameters[0]));
       }
 
-      else if(month_vector[p - 1] == "February") {
+      else if(sampling_month_vector[p - 1] == "February") {
         timepoints[p] =  round(sampling_point * (28 / static_parameters[0]));
       }
 
@@ -216,15 +232,15 @@ Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std
 
     else if (p > 1) {
 
-      if (month_vector[p - 1] == "January" | month_vector[p - 1] == "March" | month_vector[p - 1] == "May" | month_vector[p - 1] == "July" | month_vector[p - 1] == "August" | month_vector[p - 1] == "October" | month_vector[p - 1] == "December") {
+      if (sampling_month_vector[p - 1] == "January" | sampling_month_vector[p - 1] == "March" | sampling_month_vector[p - 1] == "May" | sampling_month_vector[p - 1] == "July" | sampling_month_vector[p - 1] == "August" | sampling_month_vector[p - 1] == "October" | sampling_month_vector[p - 1] == "December") {
         timepoints[p] = timepoints[p - 1] + 31 / static_parameters[0];
       }
 
-      else if(month_vector[p - 1] == "April" | month_vector[p - 1] == "June" | month_vector[p - 1] == "September" | month_vector[p - 1] == "November") {
+      else if(sampling_month_vector[p - 1] == "April" | sampling_month_vector[p - 1] == "June" | sampling_month_vector[p - 1] == "September" | sampling_month_vector[p - 1] == "November") {
         timepoints[p] = timepoints[p - 1] + 30 / static_parameters[0];
       }
 
-      else if(month_vector[p - 1] == "February") {
+      else if(sampling_month_vector[p - 1] == "February") {
         timepoints[p] = timepoints[p - 1] + 28 / static_parameters[0];
       }
     }
@@ -257,13 +273,13 @@ Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std
     for (int j = 0; j < N; j++) {
 
       // Initialising E0, L0, P0 and M0
-      fitted_parameters[18] = particles(j, 0); // E  // need to make sure this is doing what I want it to!
-      fitted_parameters[19] = particles(j, 1); // L
-      fitted_parameters[20] = particles(j, 2); // P
-      fitted_parameters[21] = particles(j, 3); // M
+      fitted_parameters[24] = particles(j, 0); // E  // need to make sure this is doing what I want it to!
+      fitted_parameters[25] = particles(j, 1); // L
+      fitted_parameters[26] = particles(j, 2); // P
+      fitted_parameters[27] = particles(j, 3); // M
 
       // RUNS THE MODEL for a SINGLE PARTICLE between the TWO TIMEPOINTS
-      Rcpp::List particle_output = mosquito_population_model(timepoints[i], timepoints[i + 1], fitted_parameters, static_parameters, rainfall, density_function, rainfall_relationship, rainfall_effect);
+      Rcpp::List particle_output = general_mosquito_population_model(timepoints[i], timepoints[i + 1], fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type);
 
       // Extracts the FULL OUTPUT for each compartment for that particle
       Rcpp::NumericVector E_output = particle_output["E_Output"];
@@ -290,10 +306,10 @@ Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std
       M_values(i , j) = current_M;
 
       if (likelihood_choice == "poisson") {
-        particle_weights[j] = Poisson(obsData[i], current_M, fitted_parameters[11]);
+        particle_weights[j] = Poisson(obsData[i], current_M, fitted_parameters[10]);
       }
       else if (likelihood_choice == "negative binomial") {
-        particle_weights[j] = Negative_Binomial(obsData[i], current_M, fitted_parameters[10], fitted_parameters[11]); // double check I've got the overdispersion and population fraction the right way around!!
+        particle_weights[j] = Negative_Binomial(obsData[i], current_M, fitted_parameters[9], fitted_parameters[10]); // double check I've got the overdispersion and population fraction the right way around!!
       }
 
       particle_weights_proper(i, j) = particle_weights[j];
@@ -395,40 +411,6 @@ std::vector <double> Particle_Weight_Normalisation(std::vector <double> particle
   }
 
   return(particle_weights_normal_scale_normalised);
-}
-
-// Linear Initital State Sampler
-//' @export
-// [[Rcpp::export]]
-std::vector <int> initial_state_sample(Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters,
-                                       double initial_K) {
-
-  double dE = fitted_parameters[0];
-  double dL = fitted_parameters[1];
-  double dP = fitted_parameters[2];
-  double muE0 = fitted_parameters[3];
-  double muL0 = fitted_parameters[4];
-  double muP = fitted_parameters[5];
-  double muM = fitted_parameters[6];
-  double lambda = fitted_parameters[7];
-  double tau = fitted_parameters[8];
-  double beta = fitted_parameters[9];
-  double K = initial_K;
-  double dt = static_parameters[0];
-
-  double x = (lambda * (muL0 / muE0) ) -  ((1 / dE) / (1/ dL)) - ((lambda - 1) * (muL0 * (1/ dE)));
-  double y = (lambda * (beta * muL0 * (1/ dE))) / ((2 * muE0 * muM * (1/ dL))*(1 + (1/ dP)*muP));
-  double W = (-0.5 * x) + sqrt(0.25 * pow(x, 2) + y);
-  int M = initial_K * ((W /(muL0 * (1/dE))) - (1 / (muL0 * (1/dL))) - 1);
-
-  int M0 = M;
-  int E0 = ((2 * W * muM * (1/ dL)) * (1 + ((1/ dP) * muP))) * M0;
-  int L0 = ((2 * muM * (1/ dL)) * (1 * ((1/ dP) * muP))) * M0;
-  int P0 = 2 * (1/ dL) * muM * M0;
-
-  std::vector<int> output = {E0, L0, P0, M0};
-  return(output);
-
 }
 
 

@@ -11,32 +11,41 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
                                              std::vector<double> rainfall,
                                              Rcpp::String mortality_density_function,
                                              Rcpp::String rainfall_relationship,
-                                             Rcpp::String decline_type,
-                                             Rcpp::String rainfall_effect) {
+                                             Rcpp::String rainfall_effect,
+                                             Rcpp::String decline_type) {
 
   // Setting the Start and Endtime
   int t = start_time;
   int end_time = end;
 
+  // Setting the Initial State Variables
+  double E = fitted_parameters[24]; double L = fitted_parameters[25];
+  double P = fitted_parameters[26]; double M = fitted_parameters[27];
+  double Be = 0; double Bl = 0; double Bp = 0; double Bm = 0;
+
+  // Constant Parameters
+  double dt = static_parameters[0];   int dd_pow = static_parameters[1]; std::vector<double> rF = rainfall; double offset = fitted_parameters[28];
+
   // Core Parameters
   double dE = 1/fitted_parameters[0]; double dL = 1/fitted_parameters[1]; double dP = 1/fitted_parameters[2]; double muE0 = fitted_parameters[3];
   double muL0 = fitted_parameters[4]; double muP = fitted_parameters[5]; double muM = fitted_parameters[6];
-  double lambda = fitted_parameters[7]; double tau_rain = fitted_parameters[8]; double beta = fitted_parameters[9];
-  double scaling_factor_rainfall = fitted_parameters[12]; double dt = static_parameters[0];   int dd_pow = static_parameters[1];
-  std::vector<double> rF = rainfall; double offset = fitted_parameters[27]; double scaling_factor_static = fitted_parameters[28];
+  double lambda = fitted_parameters[7]; double beta = fitted_parameters[8]; // fitted_parameters[9], [10] and [11] are overdisp, pop_frac and z and these don't directly feature in the model at this stage.
 
   // Parameters Governing K_Rain(t)
-  double K_Max_Hill_Rainfall = fitted_parameters[15]; // If a Hill Function is Used, Rather Than the Raw Rainfall
-  double Hill_Rainfall_1 = fitted_parameters[16]; // If a Hill Function is Used, Rather Than the Raw Rainfall
-  double Hill_Rainfall_2 = fitted_parameters[17]; // If a Hill Function is Used, Rather Than the Raw Rainfall
+  double tau_rain = fitted_parameters[12];
+  double scaling_factor_rainfall = fitted_parameters[13];
+  double K_Max_Hill_Rainfall = fitted_parameters[14]; // If a Hill Function is Used, Rather Than the Raw Rainfall
+  double Hill_Rainfall_1 = fitted_parameters[15]; // If a Hill Function is Used, Rather Than the Raw Rainfall
+  double Hill_Rainfall_2 = fitted_parameters[16]; // If a Hill Function is Used, Rather Than the Raw Rainfall
 
   // Parameters Governing K_Static(t)
-  double K_Max_Static = fitted_parameters[14] * scaling_factor_static; // Max value of K_Static
-  double Washout_Threshold = fitted_parameters[22]; // Threshold at which washout starts occurring
-  double washout_exp_scaling_factor = fitted_parameters[23]; // Governing exponential decline of K_Static in dry season
-  double washout_hill_one = fitted_parameters[24]; // Governing Hill function based decline of K_Static in dry season
-  double washout_hill_two = fitted_parameters[25]; // Governing Hill function based decline of K_Static in dry season
-  double tau_static = fitted_parameters[26]; // Number of days rainfall contributing to washout occurrence calculations
+  double tau_static = fitted_parameters[17]; // Number of days rainfall contributing to washout occurrence calculations
+  double scaling_factor_static = fitted_parameters[18];
+  double K_Max_Static = fitted_parameters[19] * scaling_factor_static; // Max value of K_Static
+  double Washout_Threshold = fitted_parameters[20]; // Threshold at which washout starts occurring
+  double washout_exp_scaling_factor = fitted_parameters[21]; // Governing exponential decline of K_Static in dry season
+  double washout_hill_one = fitted_parameters[22]; // Governing Hill function based decline of K_Static in dry season
+  double washout_hill_two = fitted_parameters[23]; // Governing Hill function based decline of K_Static in dry season
   double marker = 0; // Involved in calculating the last timepoint at which washout occurred
   double marker_stop; // Involved in calculating the last timepoint at which washout occurred
 
@@ -52,11 +61,6 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
   double rFsum_static_prior; // rainfall summed over the previous tau_static days, but for the rainfall before data start
   double mRan; // how many events out of the total pupal events (Bp) to assign as development into mosquitoes
 
-  // Setting the Initial State Variables
-  double E = fitted_parameters[18]; double L = fitted_parameters[19];
-  double P = fitted_parameters[20]; double M = fitted_parameters[21];
-  double Be = 0; double Bl = 0; double Bp = 0; double Bm = 0;
-
   // Vectors to store the output of the model at each timestep
   Rcpp::NumericVector E_output(end_time - start_time); Rcpp::NumericVector L_output(end_time - start_time);
   Rcpp::NumericVector P_output(end_time - start_time); Rcpp::NumericVector M_output(end_time - start_time);
@@ -64,46 +68,114 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
   Rcpp::NumericVector k_static_output(end); Rcpp::NumericVector k_total_output(end);
   Rcpp::NumericVector average_rainfall_K_Static(end);
 
-  Rcpp::NumericVector prior_data_calculations(offset - tau_with_dt_static + 1);
+  Rcpp::NumericVector prior_data_calculations(start_time + offset - tau_with_dt_static + 1);
   int i = 0;
   int prior_counter = 0;
 
   // Code to Calculate the Time at Which Washout Last Occurred In the Preceding, Offset Encompassed Rainfall
-  for (int p = tau_with_dt_static; p <= offset; p++) {
+  for (int p = tau_with_dt_static; p < (offset + start_time); p++) {
 
-    // For Each Timepoint to Start of Data, Calculates the Summed Rainfall
-    std::vector<double>::const_iterator first_static_prior = rF.begin() + p - tau_with_dt_static;
-    std::vector<double>::const_iterator last_static_prior = rF.begin() + p;
-    std::vector<double> rFx_static_prior(first_static_prior, last_static_prior);
-    rFsum_static_prior = std::accumulate(rFx_static_prior.begin(), rFx_static_prior.end(), 0.0);
+    if (rainfall_relationship == "mean") {
 
-    // Calculating Whether Washout Occurs
-    double rainfall_average_static_calc_prior = rFsum_static_prior / tau_with_dt_static;
-    if (rainfall_average_static_calc_prior > Washout_Threshold) {
-      marker = 0;
-    }
-    else {
-      if (marker == 0) { // First Time Washout Stops, Carrying Capacity Is At Max
-        K_Static = K_Max_Static;
-        marker_stop = p;
-        marker = 1;
+      // For Each Timepoint to Start of Data, Calculates the Summed Rainfall
+      std::vector<double>::const_iterator first_static_prior = rF.begin() + p - tau_with_dt_static;
+      std::vector<double>::const_iterator last_static_prior = rF.begin() + p;
+      std::vector<double> rFx_static_prior(first_static_prior, last_static_prior);
+      rFsum_static_prior = std::accumulate(rFx_static_prior.begin(), rFx_static_prior.end(), 0.0);
+
+      // Calculating Whether Washout Occurs
+      double rainfall_average_static_calc_prior = rFsum_static_prior / tau_with_dt_static;
+      if (rainfall_average_static_calc_prior > Washout_Threshold) {
+        marker = 0;
       }
-      else { // Then Carrying Capacity Begins to Decline
-        if (decline_type == "exponential") {
-          double calculation = -washout_exp_scaling_factor * (p - marker_stop);
-          K_Static = K_Max_Static * exp(calculation);
+      else {
+        if (marker == 0) { // First Time Washout Stops, Carrying Capacity Is At Max
+          K_Static = K_Max_Static;
+          marker_stop = p;
+          marker = 1;
         }
-        else {
-          K_Static = Hill_Function((p - marker_stop), K_Static, washout_hill_one, washout_hill_two);
+        else { // Then Carrying Capacity Begins to Decline
+          if (decline_type == "exponential") {
+            double calculation = -washout_exp_scaling_factor * (p - marker_stop);
+            K_Static = K_Max_Static * exp(calculation);
+          }
+          else {
+            K_Static = Hill_Function((p - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
+          }
         }
       }
+      prior_data_calculations[prior_counter] = K_Static;
+      prior_counter = prior_counter + 1;
     }
-    prior_data_calculations[prior_counter] = K_Static;
-    prior_counter = prior_counter + 1;
+
+    else if (rainfall_relationship == "linear") {
+      double rFsum_statically_prior = 0.0;
+      int counter_static_prior = 1;
+      for (int r = (p - tau_with_dt_static); r <= p; r++) {
+        rFsum_statically_prior = rFsum_statically_prior + (((p - tau_with_dt_static + counter_static_prior) - p + tau_with_dt_static) * rF[r]);
+        counter_static_prior = counter_static_prior + 1;
+      }
+      // Calculate Whether Washout Occurs
+      double rainfall_average_static_calc_prior = ((2.0 / pow(tau_with_dt_static, 2)) * rFsum_statically_prior); // unsure if this is what I want, double check
+      if (rainfall_average_static_calc_prior > Washout_Threshold) {
+        marker = 0;
+      }
+      else {
+        if (marker == 0) { // First Time Washout Stops, Carrying Capacity Is At Max
+          K_Static = K_Max_Static;
+          marker_stop = p;
+          marker = 1;
+        }
+        else { // Then Carrying Capacity Begins to Decline
+          if (decline_type == "exponential") {
+            double calculation = -washout_exp_scaling_factor * (p - marker_stop);
+            K_Static = K_Max_Static * exp(calculation);
+          }
+          else {
+            K_Static = Hill_Function((p - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
+          }
+        }
+      }
+      prior_data_calculations[prior_counter] = K_Static;
+      prior_counter = prior_counter + 1;
+    }
+    else if (rainfall_relationship == "exponential") {
+
+      double temp_tau_static_prior = tau_with_dt_static;
+      double rFsum_statically_prior = 0.0;
+      double calc;
+      for (int r = 0; r <= p; r++) {
+        calc = (-(p - r))/temp_tau_static_prior;
+        rFsum_statically_prior = rFsum_statically_prior + exp(calc) * rF[r];
+      }
+      // Calculating Whether Washout Occurs
+      double rainfall_average_static_calc_prior = (1.0 / (temp_tau_static_prior * (1 - exp(-(t + offset + 1) / temp_tau_static_prior)))) * rFsum_statically_prior;
+      if (rainfall_average_static_calc_prior > Washout_Threshold) {
+        marker = 0;
+      }
+      else {
+        if (marker == 0) { // First Time Washout Stops, Carrying Capacity Is At Max
+          K_Static = K_Max_Static;
+          marker_stop = p;
+          marker = 1;
+        }
+        else { // Then Carrying Capacity Begins to Decline
+          if (decline_type == "exponential") {
+            double calculation = -washout_exp_scaling_factor * (p - marker_stop);
+            K_Static = K_Max_Static * exp(calculation);
+          }
+          else {
+            K_Static = Hill_Function((p - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
+          }
+        }
+      }
+      prior_data_calculations[prior_counter] = K_Static;
+      prior_counter = prior_counter + 1;
+    }
   }
 
-  Rcpp::Rcout << "The value of K_Static at this stage is " << K_Static << std::endl;
-  Rcpp::Rcout << "The value of Marker_Stop at this stage is " << marker_stop << std::endl;
+  //Rcpp::Rcout << "The value of K_Static at this stage is " << K_Static << std::endl;
+  //Rcpp::Rcout << "The value of Marker_Stop at this stage is " << marker_stop << std::endl;
 
   int within_data_marker = 0;
 
@@ -111,8 +183,8 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
   while (t < end_time) {
 
     if (t == 0) {
-      Rcpp::Rcout << "The value of K_Static at this next stage is " << K_Static << std::endl;
-      Rcpp::Rcout << "The value of Marker_Stop at this next stage is " << marker_stop << std::endl;
+      //Rcpp::Rcout << "The value of K_Static at this next stage is " << K_Static << std::endl;
+      //Rcpp::Rcout << "The value of Marker_Stop at this next stage is " << marker_stop << std::endl;
     }
 
     // Specifying the value of K for all timepoints
@@ -166,14 +238,13 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
               double calculation = -washout_exp_scaling_factor * (t - marker_stop);
               K_Static = K_Max_Static * exp(calculation);
             }
-
           }
           else {
             if (within_data_marker == 0) {
-              K_Static = Hill_Function((t + offset - marker_stop), K_Static, washout_hill_one, washout_hill_two);
+              K_Static = Hill_Function((t + offset - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
             }
             else {
-              K_Static = Hill_Function((t + marker_stop), K_Static, washout_hill_one, washout_hill_two);
+              K_Static = Hill_Function((t - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
             }
           }
         }
@@ -216,10 +287,12 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
         counter_static = counter_static + 1;
       }
       // Calculate Whether Washout Occurs
-      double rainfall_average = ((2.0 / pow(tau_with_dt_static, 2)) * rFsum_statically); // unsure if this is what I want, double check
-      if (rainfall_average > Washout_Threshold) {
+      double rainfall_average_static_calc = ((2.0 / pow(tau_with_dt_static, 2)) * rFsum_statically); // unsure if this is what I want, double check
+      average_rainfall_K_Static[t] = rainfall_average_static_calc;
+      if (rainfall_average_static_calc > Washout_Threshold) {
         K_Static = 0;
         marker = 0;
+        within_data_marker = 1;
       }
       else {
         if (marker == 0) { // First Time Washout Stops, Carrying Capacity Is At Max
@@ -229,11 +302,22 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
         }
         else { // Then Carrying Capacity Begins to Decline
           if (decline_type == "exponential") {
-            double calculation = -washout_exp_scaling_factor * (t - marker_stop);
-            K_Static = K_Max_Static * exp(calculation);
+            if (within_data_marker == 0) {
+              double calculation = -washout_exp_scaling_factor * (t + offset - marker_stop);
+              K_Static = K_Max_Static * exp(calculation);
+            }
+            else {
+              double calculation = -washout_exp_scaling_factor * (t - marker_stop);
+              K_Static = K_Max_Static * exp(calculation);
+            }
           }
           else {
-            K_Static = Hill_Function((t - marker_stop), K_Static, washout_hill_one, washout_hill_two);
+            if (within_data_marker == 0) {
+              K_Static = Hill_Function((t + offset - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
+            }
+            else {
+              K_Static = Hill_Function((t - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
+            }
           }
         }
       }
@@ -278,10 +362,12 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
         rFsum_statically = rFsum_statically + exp(calc) * rF[r];
       }
       // Calculating Whether Washout Occurs
-      double rainfall_average = (1.0 / (temp_tau_static * (1 - exp(-(t + offset + 1) / temp_tau_static)))) * rFsum_statically;
-      if (rainfall_average > Washout_Threshold) {
+      double rainfall_average_static_calc = (1.0 / (temp_tau_static * (1 - exp(-(t + offset + 1) / temp_tau_static)))) * rFsum_statically;
+      average_rainfall_K_Static[t] = rainfall_average_static_calc;
+      if (rainfall_average_static_calc > Washout_Threshold) {
         K_Static = 0;
         marker = 0;
+        within_data_marker = 1;
       }
       else {
         if (marker == 0) { // First Time Washout Stops, Carrying Capacity Is At Max
@@ -291,11 +377,22 @@ Rcpp::List general_mosquito_population_model(int start_time, int end,
         }
         else { // Then Carrying Capacity Begins to Decline
           if (decline_type == "exponential") {
-            double calculation = -washout_exp_scaling_factor * (t - marker_stop);
-            K_Static = K_Max_Static * exp(calculation);
+            if (within_data_marker == 0) {
+              double calculation = -washout_exp_scaling_factor * (t + offset - marker_stop);
+              K_Static = K_Max_Static * exp(calculation);
+            }
+            else {
+              double calculation = -washout_exp_scaling_factor * (t - marker_stop);
+              K_Static = K_Max_Static * exp(calculation);
+            }
           }
           else {
-            K_Static = Hill_Function((t - marker_stop), K_Static, washout_hill_one, washout_hill_two);
+            if (within_data_marker == 0) {
+              K_Static = Hill_Function((t + offset - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
+            }
+            else {
+              K_Static = Hill_Function((t - marker_stop), K_Max_Static, washout_hill_one, washout_hill_two);
+            }
           }
         }
       }
