@@ -22,7 +22,8 @@ Rcpp::List runMCMC_joint_props(int N, // Number of particles,
                                Rcpp::StringVector offset_month_vector,
                                Rcpp::StringVector sampling_month_vector,
                                Rcpp::String likelihood_choice,
-                               int print_output) {
+                               int print_output,
+                               Rcpp::String calc_inside_mosquito_model) {
 
   // Removing overdispersion parameter if choice of likelihood is Poisson
   if (likelihood_choice == "poisson") {
@@ -103,14 +104,18 @@ Rcpp::List runMCMC_joint_props(int N, // Number of particles,
   // arma::mat initial_mu_checker = current_mu;
 
   // Calculating the posterior likelihood for the initial parameter values
-  double current_posterior_likelihood = posterior_joint_proposals(N, rainfall, obsData,
-                                                                  model_parameters, static_parameters, fitted_yn,
-                                                                  mortality_density_function, rainfall_relationship, rainfall_effect, decline_type,
-                                                                  sampling_point, offset_month_vector, sampling_month_vector,
-                                                                  likelihood_choice); // whole bunch of inputs here, see if I can streamline this
+  double current_posterior_likelihood = posterior(N, obsData,
+                                                  model_parameters, static_parameters,
+                                                  rainfall,
+                                                  fitted_yn,
+                                                  mortality_density_function, rainfall_relationship,
+                                                  rainfall_effect, decline_type,
+                                                  sampling_point, offset_month_vector,
+                                                  sampling_month_vector, likelihood_choice,
+                                                  calc_inside_mosquito_model); // whole bunch of inputs here, see if I can streamline this
 
   // Creating a vector to store and sequentially update model parameters as the MCMC iterates
-  Rcpp::NumericVector model_parameters_for_MCMC(29);
+  Rcpp::NumericVector model_parameters_for_MCMC(28);
 
   // Actual Model Parameters - See General_Mosquito_Model for Description of Which Parameter is at Which Position
   model_parameters_for_MCMC[0] = model_parameters[0]; model_parameters_for_MCMC[1] = model_parameters[1]; model_parameters_for_MCMC[2] = model_parameters[2];
@@ -123,7 +128,7 @@ Rcpp::List runMCMC_joint_props(int N, // Number of particles,
   model_parameters_for_MCMC[21] = model_parameters[21]; model_parameters_for_MCMC[22] = model_parameters[22]; model_parameters_for_MCMC[23] = model_parameters[23];
 
   // E, L, P, M and Offset - these values are calculated within the Particle Filter function and the Values Added In There. 0 is just a placeholder!
-  model_parameters_for_MCMC[24] = 0; model_parameters_for_MCMC[25] = 0; model_parameters_for_MCMC[26] = 0; model_parameters_for_MCMC[27] = 0; model_parameters_for_MCMC[28] = 0;
+  model_parameters_for_MCMC[24] = 0; model_parameters_for_MCMC[25] = 0; model_parameters_for_MCMC[26] = 0; model_parameters_for_MCMC[27] = 0;
 
   // Rcpp::NumericVector model_parameters_for_MCMC = Rcpp::NumericVector::create(Rcpp::Named("dE") = model_parameters[0], Rcpp::Named("dL") = model_parameters[1],
   //                                                                             Rcpp::Named("dP") = model_parameters[2], Rcpp::Named("muE0") = model_parameters[3],
@@ -169,14 +174,13 @@ Rcpp::List runMCMC_joint_props(int N, // Number of particles,
     }
 
     // This might be superfluous
-    Rcpp::StringVector names(29);
+    Rcpp::StringVector names(28);
     names[0] = "dE"; names[1] = "dL"; names[2] = "dP"; names[3] = "muE0"; names[4] = "muL0"; names[5] = "muP"; names[6] = "muM";
     names[7] = "lambda"; names[8] = "beta"; names[9] = "overdisp"; names[10] = "pop_frac"; names[11] = "z";
     names[12] = "tau_rainfall"; names[13] = "scaling_factor_rainfall"; names[14] = "K_Max_Rain"; names[15] = "Hill_Rainfall_1"; names[16] = "Hill_Rainfall_2";
     names[17] = "tau_static"; names[18] = "scaling_factor_static"; names[19] = "K_Max_Static"; names[20] = "Washout_Threshold"; names[21] = "washout_exp_scaling_factor";
     names[22] = "washout_hill_one"; names[23] = "washout_hill_two";
     names[24] = "E"; names[25] = "L"; names[26] = "P"; names[27] = "M";
-    names[28] = "offset";
     model_parameters_for_MCMC.names() = names;
 
     // Manually handling instances when proposed overdispersion value is less than or equal to 0
@@ -190,47 +194,56 @@ Rcpp::List runMCMC_joint_props(int N, // Number of particles,
     // vector which actually isn't ever altered from the set of parameters proposed.
     // Consider adding a for loop in here that basically loops over the entire vector, and if it sees any instances
     // of 0, changes them to a very very small number.
+    if (model_parameters_for_MCMC["dP"] <= 0) {
+      model_parameters_for_MCMC["dP"] = 0.01;
+    }
+    if (model_parameters_for_MCMC["muE0"] <= 0) {
+      model_parameters_for_MCMC["muE0"] = 0.001;
+    }
+    if (model_parameters_for_MCMC["muL0"] <= 0) {
+      model_parameters_for_MCMC["muL0"] = 0.001;
+    }
+    if (model_parameters_for_MCMC["muP"] <= 0) {
+      model_parameters_for_MCMC["muP"] = 0.001;
+    }
+    if (model_parameters_for_MCMC["muM"] <= 0) {
+      model_parameters_for_MCMC["muM"] = 0.001;
+    }
     if (model_parameters_for_MCMC["overdisp"] <= 0) {
       model_parameters_for_MCMC["overdisp"] = 0.001;
     }
     if (model_parameters_for_MCMC["pop_frac"] <= 0) {
       model_parameters_for_MCMC["pop_frac"] = 0.001;
     }
-    if (model_parameters_for_MCMC["muL0"] <= 0) {
-      model_parameters_for_MCMC["muL0"] = 0.001;
-    }
     if (model_parameters_for_MCMC["lambda"] <= 0) {
       model_parameters_for_MCMC["lambda"] = 0.001;
-    }
-    if (model_parameters_for_MCMC["muE0"] <= 0) {
-      model_parameters_for_MCMC["muE0"] = 0.001;
-    }
-    if (model_parameters_for_MCMC["dP"] <= 0) {
-      model_parameters_for_MCMC["dP"] = 0.01;
-    }
-    if (model_parameters_for_MCMC["scaling_factor"] <= 0) {
-      model_parameters_for_MCMC["scaling_factor"] = 0.1;
-    }
-    if (model_parameters_for_MCMC["muP"] <= 0) {
-      model_parameters_for_MCMC["muP"] = 0.001;
-    }
-    if (model_parameters_for_MCMC["tau"] < 1) {
-      model_parameters_for_MCMC["tau"] = 1;
     }
     if (model_parameters_for_MCMC["z"] < 1) {
       model_parameters_for_MCMC["z"] = 1;
     }
-    if (model_parameters_for_MCMC["K_static"] < 0) {
-      model_parameters_for_MCMC["K_static"] = 0;
+    if (model_parameters_for_MCMC["scaling_factor_rainfall"] <= 0) {
+      model_parameters_for_MCMC["scaling_factor_rainfall"] = 0.1;
+    }
+    if (model_parameters_for_MCMC["scaling_factor_static"] <= 0) {
+      model_parameters_for_MCMC["scaling_factor_static"] = 0.1;
+    }
+    if (model_parameters_for_MCMC["tau_rainfall"] < 1) {
+      model_parameters_for_MCMC["tau_rainfall"] = 1;
+    }
+    if (model_parameters_for_MCMC["tau_static"] < 1) {
+      model_parameters_for_MCMC["tau_static"] = 1;
+    }
+    if (model_parameters_for_MCMC["K_Max_Static"] < 0) {
+      model_parameters_for_MCMC["K_Max_Static"] = 0;
     }
 
-
     // Assessing the likelihood of the proposed parameter value compared to the current parameter value
-    double proposed_posterior_likelihood = posterior_joint_proposals(N, rainfall, obsData,
-                                                                     model_parameters_for_MCMC, static_parameters, fitted_yn,
-                                                                     mortality_density_function, rainfall_relationship, rainfall_effect, decline_type,
-                                                                     sampling_point, offset_month_vector, sampling_month_vector,
-                                                                     likelihood_choice);
+    double proposed_posterior_likelihood = posterior(N, obsData,
+                                                     model_parameters_for_MCMC, static_parameters,
+                                                     rainfall, fitted_yn,
+                                                     mortality_density_function, rainfall_relationship, rainfall_effect, decline_type,
+                                                     sampling_point, offset_month_vector, sampling_month_vector,
+                                                     likelihood_choice, calc_inside_mosquito_model);
 
     double likelihood_ratio = exp(proposed_posterior_likelihood - current_posterior_likelihood);
 
@@ -298,9 +311,9 @@ Rcpp::List runMCMC_joint_props(int N, // Number of particles,
           latest_parameter_values_output(i, h) = latest_parameter_values[h];
         }
 
-        Rcpp::List adapter_output = joint_proposal_SD_adapter(accepted_variable, i, start_sd_adaptation,
-                                                              current_scaling_factor, current_mu, latest_parameter_values, // technically parameter values for t + 1 as the acceptance/rejection step precedes calling this function
-                                                              current_covariance_matrix);
+        Rcpp::List adapter_output = proposal_SD_adapter(accepted_variable, i, start_sd_adaptation,
+                                                        current_scaling_factor, current_mu, latest_parameter_values, // technically parameter values for t + 1 as the acceptance/rejection step precedes calling this function
+                                                        current_covariance_matrix);
 
         // Currently having to take the output and assign it to Rcpp types before adding those elements to arma::mat/vec types.
         // Ask Rich if there's a nicer way of doing this.

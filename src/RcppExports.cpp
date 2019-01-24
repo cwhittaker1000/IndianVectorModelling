@@ -6,63 +6,100 @@
 
 using namespace Rcpp;
 
-// mosquito_population_model_ann
-Rcpp::List mosquito_population_model_ann(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect);
-RcppExport SEXP _IndianVectorModelling_mosquito_population_model_ann(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP) {
+// prior
+double prior(Rcpp::NumericVector parameter_values, Rcpp::LogicalVector fitted_yn, Rcpp::String likelihood_choice);
+RcppExport SEXP _IndianVectorModelling_prior(SEXP parameter_valuesSEXP, SEXP fitted_ynSEXP, SEXP likelihood_choiceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
-    Rcpp::traits::input_parameter< int >::type end(endSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
-    rcpp_result_gen = Rcpp::wrap(mosquito_population_model_ann(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect));
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type parameter_values(parameter_valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
+    rcpp_result_gen = Rcpp::wrap(prior(parameter_values, fitted_yn, likelihood_choice));
     return rcpp_result_gen;
 END_RCPP
 }
-// mosquito_population_model_cul
-Rcpp::List mosquito_population_model_cul(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect);
-RcppExport SEXP _IndianVectorModelling_mosquito_population_model_cul(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP) {
+// likelihood
+double likelihood(int N, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector <double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, Rcpp::String calc_inside_mosquito_model);
+RcppExport SEXP _IndianVectorModelling_likelihood(SEXP NSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP calc_inside_mosquito_modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
-    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
-    rcpp_result_gen = Rcpp::wrap(mosquito_population_model_cul(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect));
-    return rcpp_result_gen;
-END_RCPP
-}
-// mosquito_population_model_fluv
-Rcpp::List mosquito_population_model_fluv(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String decline_type);
-RcppExport SEXP _IndianVectorModelling_mosquito_population_model_fluv(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP decline_typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
-    Rcpp::traits::input_parameter< int >::type end(endSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type decline_type(decline_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(mosquito_population_model_fluv(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type));
+    Rcpp::traits::input_parameter< double >::type sampling_point(sampling_pointSEXP);
+    Rcpp::traits::input_parameter< Rcpp::StringVector >::type offset_month_vector(offset_month_vectorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::StringVector >::type sampling_month_vector(sampling_month_vectorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type calc_inside_mosquito_model(calc_inside_mosquito_modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(likelihood(N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model));
+    return rcpp_result_gen;
+END_RCPP
+}
+// posterior
+double posterior(int N, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector <double> rainfall, Rcpp::LogicalVector fitted_yn, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, Rcpp::String calc_inside_mosquito_model);
+RcppExport SEXP _IndianVectorModelling_posterior(SEXP NSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP fitted_ynSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP calc_inside_mosquito_modelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type decline_type(decline_typeSEXP);
+    Rcpp::traits::input_parameter< double >::type sampling_point(sampling_pointSEXP);
+    Rcpp::traits::input_parameter< Rcpp::StringVector >::type offset_month_vector(offset_month_vectorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::StringVector >::type sampling_month_vector(sampling_month_vectorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type calc_inside_mosquito_model(calc_inside_mosquito_modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(posterior(N, obsData, fitted_parameters, static_parameters, rainfall, fitted_yn, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model));
+    return rcpp_result_gen;
+END_RCPP
+}
+// proposal_SD_adapter
+Rcpp::List proposal_SD_adapter(double accepted_variable, double current_iteration, double iteration_cooling_began, double current_scaling_factor, arma::mat mu_previous, arma::mat current_parameter_values, arma::mat current_covariance_matrix);
+RcppExport SEXP _IndianVectorModelling_proposal_SD_adapter(SEXP accepted_variableSEXP, SEXP current_iterationSEXP, SEXP iteration_cooling_beganSEXP, SEXP current_scaling_factorSEXP, SEXP mu_previousSEXP, SEXP current_parameter_valuesSEXP, SEXP current_covariance_matrixSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type accepted_variable(accepted_variableSEXP);
+    Rcpp::traits::input_parameter< double >::type current_iteration(current_iterationSEXP);
+    Rcpp::traits::input_parameter< double >::type iteration_cooling_began(iteration_cooling_beganSEXP);
+    Rcpp::traits::input_parameter< double >::type current_scaling_factor(current_scaling_factorSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mu_previous(mu_previousSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type current_parameter_values(current_parameter_valuesSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type current_covariance_matrix(current_covariance_matrixSEXP);
+    rcpp_result_gen = Rcpp::wrap(proposal_SD_adapter(accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mvrnormArma
+arma::mat mvrnormArma(arma::mat mu, arma::mat sigma);
+RcppExport SEXP _IndianVectorModelling_mvrnormArma(SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(mvrnormArma(mu, sigma));
     return rcpp_result_gen;
 END_RCPP
 }
 // general_mosquito_population_model
-Rcpp::List general_mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type);
-RcppExport SEXP _IndianVectorModelling_general_mosquito_population_model(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP) {
+Rcpp::List general_mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, Rcpp::String calc_inside_mosquito_model, std::vector<double> input_Exponential_Weighting_Factors_Static, std::vector<double> input_Exponential_Weighting_Factors_Rainfall, std::vector<double> input_Exponential_Normalisation_Factors_Static, std::vector<double> input_Exponential_Normalisation_Factors_Rainfall, int full_output);
+RcppExport SEXP _IndianVectorModelling_general_mosquito_population_model(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP calc_inside_mosquito_modelSEXP, SEXP input_Exponential_Weighting_Factors_StaticSEXP, SEXP input_Exponential_Weighting_Factors_RainfallSEXP, SEXP input_Exponential_Normalisation_Factors_StaticSEXP, SEXP input_Exponential_Normalisation_Factors_RainfallSEXP, SEXP full_outputSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -75,7 +112,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type decline_type(decline_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(general_mosquito_population_model(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type));
+    Rcpp::traits::input_parameter< Rcpp::String >::type calc_inside_mosquito_model(calc_inside_mosquito_modelSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type input_Exponential_Weighting_Factors_Static(input_Exponential_Weighting_Factors_StaticSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type input_Exponential_Weighting_Factors_Rainfall(input_Exponential_Weighting_Factors_RainfallSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type input_Exponential_Normalisation_Factors_Static(input_Exponential_Normalisation_Factors_StaticSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type input_Exponential_Normalisation_Factors_Rainfall(input_Exponential_Normalisation_Factors_RainfallSEXP);
+    Rcpp::traits::input_parameter< int >::type full_output(full_outputSEXP);
+    rcpp_result_gen = Rcpp::wrap(general_mosquito_population_model(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, calc_inside_mosquito_model, input_Exponential_Weighting_Factors_Static, input_Exponential_Weighting_Factors_Rainfall, input_Exponential_Normalisation_Factors_Static, input_Exponential_Normalisation_Factors_Rainfall, full_output));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -93,137 +136,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// test_initial_state_sample
-std::vector <int> test_initial_state_sample(Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String mortality_density_function);
-RcppExport SEXP _IndianVectorModelling_test_initial_state_sample(SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP mortality_density_functionSEXP) {
+// initial_state_sample
+std::vector <int> initial_state_sample(Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String mortality_density_function);
+RcppExport SEXP _IndianVectorModelling_initial_state_sample(SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP mortality_density_functionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
-    rcpp_result_gen = Rcpp::wrap(test_initial_state_sample(fitted_parameters, static_parameters, mortality_density_function));
-    return rcpp_result_gen;
-END_RCPP
-}
-// prior
-double prior(Rcpp::NumericVector parameter_values, Rcpp::LogicalVector fitted_yn, Rcpp::String likelihood_choice);
-RcppExport SEXP _IndianVectorModelling_prior(SEXP parameter_valuesSEXP, SEXP fitted_ynSEXP, SEXP likelihood_choiceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type parameter_values(parameter_valuesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(prior(parameter_values, fitted_yn, likelihood_choice));
-    return rcpp_result_gen;
-END_RCPP
-}
-// likelihood_function
-double likelihood_function(int N, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice);
-RcppExport SEXP _IndianVectorModelling_likelihood_function(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type decline_type(decline_typeSEXP);
-    Rcpp::traits::input_parameter< double >::type sampling_point(sampling_pointSEXP);
-    Rcpp::traits::input_parameter< Rcpp::StringVector >::type offset_month_vector(offset_month_vectorSEXP);
-    Rcpp::traits::input_parameter< Rcpp::StringVector >::type sampling_month_vector(sampling_month_vectorSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(likelihood_function(N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_joint_proposals
-double posterior_joint_proposals(int N, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::LogicalVector fitted_yn, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice);
-RcppExport SEXP _IndianVectorModelling_posterior_joint_proposals(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP fitted_ynSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type fitted_yn(fitted_ynSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type decline_type(decline_typeSEXP);
-    Rcpp::traits::input_parameter< double >::type sampling_point(sampling_pointSEXP);
-    Rcpp::traits::input_parameter< Rcpp::StringVector >::type offset_month_vector(offset_month_vectorSEXP);
-    Rcpp::traits::input_parameter< Rcpp::StringVector >::type sampling_month_vector(sampling_month_vectorSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_joint_proposals(N, rainfall, obsData, fitted_parameters, static_parameters, fitted_yn, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice));
-    return rcpp_result_gen;
-END_RCPP
-}
-// joint_proposal_SD_adapter
-Rcpp::List joint_proposal_SD_adapter(double accepted_variable, double current_iteration, double iteration_cooling_began, double current_scaling_factor, arma::mat mu_previous, arma::mat current_parameter_values, arma::mat current_covariance_matrix);
-RcppExport SEXP _IndianVectorModelling_joint_proposal_SD_adapter(SEXP accepted_variableSEXP, SEXP current_iterationSEXP, SEXP iteration_cooling_beganSEXP, SEXP current_scaling_factorSEXP, SEXP mu_previousSEXP, SEXP current_parameter_valuesSEXP, SEXP current_covariance_matrixSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type accepted_variable(accepted_variableSEXP);
-    Rcpp::traits::input_parameter< double >::type current_iteration(current_iterationSEXP);
-    Rcpp::traits::input_parameter< double >::type iteration_cooling_began(iteration_cooling_beganSEXP);
-    Rcpp::traits::input_parameter< double >::type current_scaling_factor(current_scaling_factorSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type mu_previous(mu_previousSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type current_parameter_values(current_parameter_valuesSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type current_covariance_matrix(current_covariance_matrixSEXP);
-    rcpp_result_gen = Rcpp::wrap(joint_proposal_SD_adapter(accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix));
-    return rcpp_result_gen;
-END_RCPP
-}
-// mosquito_population_model
-Rcpp::List mosquito_population_model(int start_time, int end, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect);
-RcppExport SEXP _IndianVectorModelling_mosquito_population_model(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
-    Rcpp::traits::input_parameter< int >::type end(endSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
-    rcpp_result_gen = Rcpp::wrap(mosquito_population_model(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect));
-    return rcpp_result_gen;
-END_RCPP
-}
-// mvrnormArma
-arma::mat mvrnormArma(arma::mat mu, arma::mat sigma);
-RcppExport SEXP _IndianVectorModelling_mvrnormArma(SEXP muSEXP, SEXP sigmaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(mvrnormArma(mu, sigma));
+    rcpp_result_gen = Rcpp::wrap(initial_state_sample(fitted_parameters, static_parameters, mortality_density_function));
     return rcpp_result_gen;
 END_RCPP
 }
 // min_output_particle_filter
-double min_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice);
-RcppExport SEXP _IndianVectorModelling_min_output_particle_filter(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP) {
+double min_output_particle_filter(int N, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector <double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, Rcpp::String calc_inside_mosquito_model);
+RcppExport SEXP _IndianVectorModelling_min_output_particle_filter(SEXP NSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP calc_inside_mosquito_modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
     Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
@@ -232,21 +168,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::StringVector >::type offset_month_vector(offset_month_vectorSEXP);
     Rcpp::traits::input_parameter< Rcpp::StringVector >::type sampling_month_vector(sampling_month_vectorSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(min_output_particle_filter(N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice));
+    Rcpp::traits::input_parameter< Rcpp::String >::type calc_inside_mosquito_model(calc_inside_mosquito_modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(min_output_particle_filter(N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model));
     return rcpp_result_gen;
 END_RCPP
 }
 // full_output_particle_filter
-Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice);
-RcppExport SEXP _IndianVectorModelling_full_output_particle_filter(SEXP NSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP) {
+Rcpp::List full_output_particle_filter(int N, std::vector <int> obsData, Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters, std::vector <double> rainfall, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, Rcpp::String calc_inside_mosquito_model);
+RcppExport SEXP _IndianVectorModelling_full_output_particle_filter(SEXP NSEXP, SEXP obsDataSEXP, SEXP fitted_parametersSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP calc_inside_mosquito_modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
     Rcpp::traits::input_parameter< std::vector <int> >::type obsData(obsDataSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters(fitted_parametersSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type rainfall(rainfallSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function(mortality_density_functionSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship(rainfall_relationshipSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_effect(rainfall_effectSEXP);
@@ -255,7 +192,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::StringVector >::type offset_month_vector(offset_month_vectorSEXP);
     Rcpp::traits::input_parameter< Rcpp::StringVector >::type sampling_month_vector(sampling_month_vectorSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
-    rcpp_result_gen = Rcpp::wrap(full_output_particle_filter(N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice));
+    Rcpp::traits::input_parameter< Rcpp::String >::type calc_inside_mosquito_model(calc_inside_mosquito_modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(full_output_particle_filter(N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -311,9 +249,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// runMCMC_joint_props
-Rcpp::List runMCMC_joint_props(int N, int start_sd_adaptation, int end_sd_adaptation, int number_of_iterations, std::vector <double> initial_sds, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, Rcpp::LogicalVector fitted_yn, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, int print_output);
-RcppExport SEXP _IndianVectorModelling_runMCMC_joint_props(SEXP NSEXP, SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP number_of_iterationsSEXP, SEXP initial_sdsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP fitted_ynSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP print_outputSEXP) {
+// run_particle_MCMC
+Rcpp::List run_particle_MCMC(int N, int start_sd_adaptation, int end_sd_adaptation, int number_of_iterations, std::vector <double> initial_sds, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, Rcpp::LogicalVector fitted_yn, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, int print_output, Rcpp::String calc_inside_mosquito_model);
+RcppExport SEXP _IndianVectorModelling_run_particle_MCMC(SEXP NSEXP, SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP number_of_iterationsSEXP, SEXP initial_sdsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP fitted_ynSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP print_outputSEXP, SEXP calc_inside_mosquito_modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -336,73 +274,28 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::StringVector >::type sampling_month_vector(sampling_month_vectorSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
     Rcpp::traits::input_parameter< int >::type print_output(print_outputSEXP);
-    rcpp_result_gen = Rcpp::wrap(runMCMC_joint_props(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output));
-    return rcpp_result_gen;
-END_RCPP
-}
-// testmvrnormArma
-arma::mat testmvrnormArma(arma::mat mu, arma::mat sigma);
-RcppExport SEXP _IndianVectorModelling_testmvrnormArma(SEXP muSEXP, SEXP sigmaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(testmvrnormArma(mu, sigma));
-    return rcpp_result_gen;
-END_RCPP
-}
-// two_species_mosquito_population_model_with_comp_k_part
-Rcpp::List two_species_mosquito_population_model_with_comp_k_part(int start_time, int end, Rcpp::NumericVector fitted_parameters_species_one, Rcpp::NumericVector fitted_parameters_species_two, Rcpp::NumericVector static_parameters, std::vector<double> rainfall, Rcpp::String mortality_density_function_species_one, Rcpp::String mortality_density_function_species_two, Rcpp::String rainfall_relationship_species_one, Rcpp::String rainfall_relationship_species_two, double competition_parameter_two_on_one, double competition_parameter_one_on_two, double species_one_static_K, double species_two_static_K, double threshold_dd_1, double threshold_dd_2, double max_K_1, double max_K_2);
-RcppExport SEXP _IndianVectorModelling_two_species_mosquito_population_model_with_comp_k_part(SEXP start_timeSEXP, SEXP endSEXP, SEXP fitted_parameters_species_oneSEXP, SEXP fitted_parameters_species_twoSEXP, SEXP static_parametersSEXP, SEXP rainfallSEXP, SEXP mortality_density_function_species_oneSEXP, SEXP mortality_density_function_species_twoSEXP, SEXP rainfall_relationship_species_oneSEXP, SEXP rainfall_relationship_species_twoSEXP, SEXP competition_parameter_two_on_oneSEXP, SEXP competition_parameter_one_on_twoSEXP, SEXP species_one_static_KSEXP, SEXP species_two_static_KSEXP, SEXP threshold_dd_1SEXP, SEXP threshold_dd_2SEXP, SEXP max_K_1SEXP, SEXP max_K_2SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type start_time(start_timeSEXP);
-    Rcpp::traits::input_parameter< int >::type end(endSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters_species_one(fitted_parameters_species_oneSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type fitted_parameters_species_two(fitted_parameters_species_twoSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type static_parameters(static_parametersSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type rainfall(rainfallSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function_species_one(mortality_density_function_species_oneSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type mortality_density_function_species_two(mortality_density_function_species_twoSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship_species_one(rainfall_relationship_species_oneSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type rainfall_relationship_species_two(rainfall_relationship_species_twoSEXP);
-    Rcpp::traits::input_parameter< double >::type competition_parameter_two_on_one(competition_parameter_two_on_oneSEXP);
-    Rcpp::traits::input_parameter< double >::type competition_parameter_one_on_two(competition_parameter_one_on_twoSEXP);
-    Rcpp::traits::input_parameter< double >::type species_one_static_K(species_one_static_KSEXP);
-    Rcpp::traits::input_parameter< double >::type species_two_static_K(species_two_static_KSEXP);
-    Rcpp::traits::input_parameter< double >::type threshold_dd_1(threshold_dd_1SEXP);
-    Rcpp::traits::input_parameter< double >::type threshold_dd_2(threshold_dd_2SEXP);
-    Rcpp::traits::input_parameter< double >::type max_K_1(max_K_1SEXP);
-    Rcpp::traits::input_parameter< double >::type max_K_2(max_K_2SEXP);
-    rcpp_result_gen = Rcpp::wrap(two_species_mosquito_population_model_with_comp_k_part(start_time, end, fitted_parameters_species_one, fitted_parameters_species_two, static_parameters, rainfall, mortality_density_function_species_one, mortality_density_function_species_two, rainfall_relationship_species_one, rainfall_relationship_species_two, competition_parameter_two_on_one, competition_parameter_one_on_two, species_one_static_K, species_two_static_K, threshold_dd_1, threshold_dd_2, max_K_1, max_K_2));
+    Rcpp::traits::input_parameter< Rcpp::String >::type calc_inside_mosquito_model(calc_inside_mosquito_modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(run_particle_MCMC(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_IndianVectorModelling_mosquito_population_model_ann", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model_ann, 8},
-    {"_IndianVectorModelling_mosquito_population_model_cul", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model_cul, 8},
-    {"_IndianVectorModelling_mosquito_population_model_fluv", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model_fluv, 8},
-    {"_IndianVectorModelling_general_mosquito_population_model", (DL_FUNC) &_IndianVectorModelling_general_mosquito_population_model, 9},
-    {"_IndianVectorModelling_Hill_Function", (DL_FUNC) &_IndianVectorModelling_Hill_Function, 4},
-    {"_IndianVectorModelling_test_initial_state_sample", (DL_FUNC) &_IndianVectorModelling_test_initial_state_sample, 3},
     {"_IndianVectorModelling_prior", (DL_FUNC) &_IndianVectorModelling_prior, 3},
-    {"_IndianVectorModelling_likelihood_function", (DL_FUNC) &_IndianVectorModelling_likelihood_function, 13},
-    {"_IndianVectorModelling_posterior_joint_proposals", (DL_FUNC) &_IndianVectorModelling_posterior_joint_proposals, 14},
-    {"_IndianVectorModelling_joint_proposal_SD_adapter", (DL_FUNC) &_IndianVectorModelling_joint_proposal_SD_adapter, 7},
-    {"_IndianVectorModelling_mosquito_population_model", (DL_FUNC) &_IndianVectorModelling_mosquito_population_model, 8},
+    {"_IndianVectorModelling_likelihood", (DL_FUNC) &_IndianVectorModelling_likelihood, 14},
+    {"_IndianVectorModelling_posterior", (DL_FUNC) &_IndianVectorModelling_posterior, 15},
+    {"_IndianVectorModelling_proposal_SD_adapter", (DL_FUNC) &_IndianVectorModelling_proposal_SD_adapter, 7},
     {"_IndianVectorModelling_mvrnormArma", (DL_FUNC) &_IndianVectorModelling_mvrnormArma, 2},
-    {"_IndianVectorModelling_min_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_min_output_particle_filter, 13},
-    {"_IndianVectorModelling_full_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_full_output_particle_filter, 13},
+    {"_IndianVectorModelling_general_mosquito_population_model", (DL_FUNC) &_IndianVectorModelling_general_mosquito_population_model, 15},
+    {"_IndianVectorModelling_Hill_Function", (DL_FUNC) &_IndianVectorModelling_Hill_Function, 4},
+    {"_IndianVectorModelling_initial_state_sample", (DL_FUNC) &_IndianVectorModelling_initial_state_sample, 3},
+    {"_IndianVectorModelling_min_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_min_output_particle_filter, 14},
+    {"_IndianVectorModelling_full_output_particle_filter", (DL_FUNC) &_IndianVectorModelling_full_output_particle_filter, 14},
     {"_IndianVectorModelling_Negative_Binomial", (DL_FUNC) &_IndianVectorModelling_Negative_Binomial, 4},
     {"_IndianVectorModelling_Poisson", (DL_FUNC) &_IndianVectorModelling_Poisson, 3},
     {"_IndianVectorModelling_Particle_Weight_Normalisation", (DL_FUNC) &_IndianVectorModelling_Particle_Weight_Normalisation, 1},
     {"_IndianVectorModelling_weighted_sampling_with_replacement", (DL_FUNC) &_IndianVectorModelling_weighted_sampling_with_replacement, 4},
-    {"_IndianVectorModelling_runMCMC_joint_props", (DL_FUNC) &_IndianVectorModelling_runMCMC_joint_props, 19},
-    {"_IndianVectorModelling_testmvrnormArma", (DL_FUNC) &_IndianVectorModelling_testmvrnormArma, 2},
-    {"_IndianVectorModelling_two_species_mosquito_population_model_with_comp_k_part", (DL_FUNC) &_IndianVectorModelling_two_species_mosquito_population_model_with_comp_k_part, 18},
+    {"_IndianVectorModelling_run_particle_MCMC", (DL_FUNC) &_IndianVectorModelling_run_particle_MCMC, 20},
     {NULL, NULL, 0}
 };
 

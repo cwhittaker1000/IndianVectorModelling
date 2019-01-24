@@ -2,23 +2,32 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-mosquito_population_model_ann <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect) {
-    .Call('_IndianVectorModelling_mosquito_population_model_ann', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect)
+prior <- function(parameter_values, fitted_yn, likelihood_choice) {
+    .Call('_IndianVectorModelling_prior', PACKAGE = 'IndianVectorModelling', parameter_values, fitted_yn, likelihood_choice)
 }
 
 #' @export
-mosquito_population_model_cul <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect) {
-    .Call('_IndianVectorModelling_mosquito_population_model_cul', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect)
+likelihood <- function(N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model) {
+    .Call('_IndianVectorModelling_likelihood', PACKAGE = 'IndianVectorModelling', N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model)
 }
 
 #' @export
-mosquito_population_model_fluv <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type) {
-    .Call('_IndianVectorModelling_mosquito_population_model_fluv', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, decline_type)
+posterior <- function(N, obsData, fitted_parameters, static_parameters, rainfall, fitted_yn, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model) {
+    .Call('_IndianVectorModelling_posterior', PACKAGE = 'IndianVectorModelling', N, obsData, fitted_parameters, static_parameters, rainfall, fitted_yn, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model)
 }
 
 #' @export
-general_mosquito_population_model <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type) {
-    .Call('_IndianVectorModelling_general_mosquito_population_model', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type)
+proposal_SD_adapter <- function(accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix) {
+    .Call('_IndianVectorModelling_proposal_SD_adapter', PACKAGE = 'IndianVectorModelling', accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix)
+}
+
+mvrnormArma <- function(mu, sigma) {
+    .Call('_IndianVectorModelling_mvrnormArma', PACKAGE = 'IndianVectorModelling', mu, sigma)
+}
+
+#' @export
+general_mosquito_population_model <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, calc_inside_mosquito_model, input_Exponential_Weighting_Factors_Static, input_Exponential_Weighting_Factors_Rainfall, input_Exponential_Normalisation_Factors_Static, input_Exponential_Normalisation_Factors_Rainfall, full_output) {
+    .Call('_IndianVectorModelling_general_mosquito_population_model', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, calc_inside_mosquito_model, input_Exponential_Weighting_Factors_Static, input_Exponential_Weighting_Factors_Rainfall, input_Exponential_Normalisation_Factors_Static, input_Exponential_Normalisation_Factors_Rainfall, full_output)
 }
 
 #' @export
@@ -27,60 +36,18 @@ Hill_Function <- function(rainfall, K_max, a, b) {
 }
 
 #' @export
-test_initial_state_sample <- function(fitted_parameters, static_parameters, mortality_density_function) {
-    .Call('_IndianVectorModelling_test_initial_state_sample', PACKAGE = 'IndianVectorModelling', fitted_parameters, static_parameters, mortality_density_function)
+initial_state_sample <- function(fitted_parameters, static_parameters, mortality_density_function) {
+    .Call('_IndianVectorModelling_initial_state_sample', PACKAGE = 'IndianVectorModelling', fitted_parameters, static_parameters, mortality_density_function)
 }
 
 #' @export
-prior <- function(parameter_values, fitted_yn, likelihood_choice) {
-    .Call('_IndianVectorModelling_prior', PACKAGE = 'IndianVectorModelling', parameter_values, fitted_yn, likelihood_choice)
+min_output_particle_filter <- function(N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model) {
+    .Call('_IndianVectorModelling_min_output_particle_filter', PACKAGE = 'IndianVectorModelling', N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model)
 }
 
 #' @export
-likelihood_function <- function(N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice) {
-    .Call('_IndianVectorModelling_likelihood_function', PACKAGE = 'IndianVectorModelling', N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice)
-}
-
-#' @export
-posterior_joint_proposals <- function(N, rainfall, obsData, fitted_parameters, static_parameters, fitted_yn, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice) {
-    .Call('_IndianVectorModelling_posterior_joint_proposals', PACKAGE = 'IndianVectorModelling', N, rainfall, obsData, fitted_parameters, static_parameters, fitted_yn, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice)
-}
-
-#' @export
-joint_proposal_SD_adapter <- function(accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix) {
-    .Call('_IndianVectorModelling_joint_proposal_SD_adapter', PACKAGE = 'IndianVectorModelling', accepted_variable, current_iteration, iteration_cooling_began, current_scaling_factor, mu_previous, current_parameter_values, current_covariance_matrix)
-}
-
-#' @export
-mosquito_population_model <- function(start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect) {
-    .Call('_IndianVectorModelling_mosquito_population_model', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect)
-}
-
-#' Multivariate Normal Sampler
-#'
-#' Random number generation for a multivariate normal (Gaussian) distribution. Uses a Cholesky
-#' decomposition to propose new values from a multivariate normal distribution with a given mean
-#' vector (mu) and a specified covariance matrix (sigma).
-#'
-#' Note: Currently (for my own modelling purposes) won't return values < 0.
-#'
-#' @param mu Mean of the multivariate normal distribution (has to be specified as a matrix with
-#' 1 row and number of columns equal to the number of variables in the multivariate distribution e.g. 2 for bivariate)
-#' @param sigma A covariance matrix associated with mu
-#' @export
-#'
-mvrnormArma <- function(mu, sigma) {
-    .Call('_IndianVectorModelling_mvrnormArma', PACKAGE = 'IndianVectorModelling', mu, sigma)
-}
-
-#' @export
-min_output_particle_filter <- function(N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice) {
-    .Call('_IndianVectorModelling_min_output_particle_filter', PACKAGE = 'IndianVectorModelling', N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice)
-}
-
-#' @export
-full_output_particle_filter <- function(N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice) {
-    .Call('_IndianVectorModelling_full_output_particle_filter', PACKAGE = 'IndianVectorModelling', N, rainfall, obsData, fitted_parameters, static_parameters, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice)
+full_output_particle_filter <- function(N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model) {
+    .Call('_IndianVectorModelling_full_output_particle_filter', PACKAGE = 'IndianVectorModelling', N, obsData, fitted_parameters, static_parameters, rainfall, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, calc_inside_mosquito_model)
 }
 
 #' @export
@@ -104,29 +71,7 @@ weighted_sampling_with_replacement <- function(n, prob, p_tot, K) {
 }
 
 #' @export
-runMCMC_joint_props <- function(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output) {
-    .Call('_IndianVectorModelling_runMCMC_joint_props', PACKAGE = 'IndianVectorModelling', N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output)
-}
-
-#' Multivariate Normal Sampler
-#'
-#' Random number generation for a multivariate normal (Gaussian) distribution. Uses a Cholesky
-#' decomposition to propose new values from a multivariate normal distribution with a given mean
-#' vector (mu) and a specified covariance matrix (sigma).
-#'
-#' Note: Currently (for my own modelling purposes) won't return values < 0.
-#'
-#' @param mu Mean of the multivariate normal distribution (has to be specified as a matrix with
-#' 1 row and number of columns equal to the number of variables in the multivariate distribution e.g. 2 for bivariate)
-#' @param sigma A covariance matrix associated with mu
-#' @export
-#'
-testmvrnormArma <- function(mu, sigma) {
-    .Call('_IndianVectorModelling_testmvrnormArma', PACKAGE = 'IndianVectorModelling', mu, sigma)
-}
-
-#' @export
-two_species_mosquito_population_model_with_comp_k_part <- function(start_time, end, fitted_parameters_species_one, fitted_parameters_species_two, static_parameters, rainfall, mortality_density_function_species_one, mortality_density_function_species_two, rainfall_relationship_species_one, rainfall_relationship_species_two, competition_parameter_two_on_one, competition_parameter_one_on_two, species_one_static_K, species_two_static_K, threshold_dd_1, threshold_dd_2, max_K_1, max_K_2) {
-    .Call('_IndianVectorModelling_two_species_mosquito_population_model_with_comp_k_part', PACKAGE = 'IndianVectorModelling', start_time, end, fitted_parameters_species_one, fitted_parameters_species_two, static_parameters, rainfall, mortality_density_function_species_one, mortality_density_function_species_two, rainfall_relationship_species_one, rainfall_relationship_species_two, competition_parameter_two_on_one, competition_parameter_one_on_two, species_one_static_K, species_two_static_K, threshold_dd_1, threshold_dd_2, max_K_1, max_K_2)
+run_particle_MCMC <- function(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model) {
+    .Call('_IndianVectorModelling_run_particle_MCMC', PACKAGE = 'IndianVectorModelling', N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model)
 }
 

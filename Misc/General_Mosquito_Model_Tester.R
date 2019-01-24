@@ -52,36 +52,38 @@ model_parameters <- c("dE" = 6.96, "dL" = 6.0185, "dP" = 1.96,
                       "K_Max_Hill_Rainfall" = 0, "Hill_Rainfall_1" = 0, "Hill_Rainfall_2" = 0,
                       "tau_static" = 50, "scaling_factor_static" = 2000, "K_Max_Static" = 50,
                       "Washout_Threshold" = 4, "Washout_Exp_Decline" = 0.004, "Washout_Hill_1" = 400, "Washout_Hill_2" = 3,
-                      "E" = 0, "L" = 0, "P" = 0, "M" = 0, "offset" = 0)
+                      "E" = 537, "L" = 102, "P" = 19, "M" = 12, "offset" = 1210)
 
 # Note that when using start and endtimes != 0 that you need to use actual initial conditions
 # from the previous timepoint. Starting with 0s again will give you diff values and won't be comparable.
-start_time <- 1500
-end_time <- 2500
+
+# Note also that exponential weighting of rainfall leads the simulation to take absolutely ages. Order of 1 second.
+# Think it's likely this will be so slow as to preclude using it as a relationship. Consider chatting to Rich about
+# what I'm doing and whether I could do differently. One option would be
+
+start_time <- 0
+end_time <- 3500
 
 tic()
 general_model_output <- general_mosquito_population_model(start_time, end_time, model_parameters, static_parameters, rainfall,
                                                           "linear", # Density Dependence Functional Form
-                                                          "mean", # K_Rain Functional Form
-                                                          "raw", # K_Rain Using Raw Average or Hill Function
+                                                          "exponential", # K_Rain Functional Form
+                                                          "hill", # K_Rain Using Raw Average or Hill Function
                                                           "exponential") # K_Static Decline Functional Form
 toc()
 
 plot(general_model_output$M_Output, type = "l", lwd = 2, col = "blue")
-lines(seq(1501, 2500), general_model_output$M_Output, type = "l", lwd = 2, col = "orange")
+lines(seq(1001, 3500), general_model_output$M_Output, type = "l", lwd = 2, col = "orange")
 
-general_model_output$E_Output[500]
-general_model_output$L_Output[500]
-general_model_output$P_Output[500]
-general_model_output$M_Output[500]
+general_model_output$E_Output[1000]
+general_model_output$L_Output[1000]
+general_model_output$P_Output[1000]
+general_model_output$M_Output[1000]
 
 plot(general_model_output$K_Total, type = "l", lwd = 2, col = "blue")
 lines(general_model_output$K_Total, type = "l", lwd = 2, col = "red")
 
-
-
 plot(general_model_output$`prior K`, type = "l", col = "red")
-
 plot(general_model_output$K_Total, type = "l", lwd = 2, col = "red")
 
 length(seq(start_time, end_time-1, 1))

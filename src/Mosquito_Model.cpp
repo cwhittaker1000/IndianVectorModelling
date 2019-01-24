@@ -41,16 +41,20 @@
 ///       4) CALCULATING THE VALUE OF THE CARRYING CAPACITY (K) FOR THE CURRENT TIMEPOINT             ///
 ///       5) MODEL RUNNING BETWEEN CURRENT TIMEPOINT AND THE NEXT                                     ///
 ///                                                                                                   ///
+///  Below the code for the Mosquito Population Model, there is code for two other functions,         ///
+///  including a Hill Function (returning some inputs put through a Hill Function) and also the       ///
+///  function used to produce Initial Values (given a set of parameter values) to input into the      ///
+///  model.                                                                                           ///
+///                                                                                                   ///
 ///                                                                                                   ///
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Specifying the Includes and Depends Required
-#include "Mosquito_Population_Model.hpp"
-#include "Hill_Function.hpp"
+#include "Mosquito_Model.hpp"
 // [[Rcpp::depends(BH)]]
 // [[Rcpp::plugins(cpp11)]]
-
+// [[Rcpp::depends(RcppArmadillo)]]
 
 //' @export
 // [[Rcpp::export]]
@@ -65,7 +69,8 @@ Rcpp::List general_mosquito_population_model(int start_time, int end, // Start a
                                              std::vector<double> input_Exponential_Weighting_Factors_Static, // Related to calc_inside_mosquito_model
                                              std::vector<double> input_Exponential_Weighting_Factors_Rainfall, // Related to calc_inside_mosquito_model
                                              std::vector<double> input_Exponential_Normalisation_Factors_Static, // Related to calc_inside_mosquito_model
-                                             std::vector<double> input_Exponential_Normalisation_Factors_Rainfall) { // Related to calc_inside_mosquito_model
+                                             std::vector<double> input_Exponential_Normalisation_Factors_Rainfall, // Related to calc_inside_mosquito_model
+                                             int full_output) { // Specifies whether to output lots of things or just model compartment outputs
 
 
   ///////////////////////////////////////////////////////////////////
@@ -173,10 +178,10 @@ Rcpp::List general_mosquito_population_model(int start_time, int end, // Start a
   double temp_rain_weighting_factor;
   double temp_static_normalisation_factor;
   double temp_rain_normalisation_factor;
-  std::vector<double> temp_vector_Exponential_Weighting_Factors_Static;
-  std::vector<double> temp_vector_Exponential_Weighting_Factors_Rainfall;
-  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Static;
-  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Rainfall;
+  std::vector<double> temp_vector_Exponential_Weighting_Factors_Static;  // These are not superfluous- produces different results if I'm adding to the
+  std::vector<double> temp_vector_Exponential_Weighting_Factors_Rainfall; // vector directly as opposed to creating a temporary one and then copying the
+  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Static; // results over after the temporary one has been filled.
+  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Rainfall;  // ASK RICH WHY THIS IS!!!!
   std::vector<double> Exponential_Weighting_Factors_Static;
   std::vector<double> Exponential_Weighting_Factors_Rainfall;
   std::vector<double> Exponential_Normalisation_Factors_Static;
@@ -728,17 +733,101 @@ Rcpp::List general_mosquito_population_model(int start_time, int end, // Start a
   // Rcpp::Rcout << "Step 4: Model Running COMPLETE" << std::endl;
 
   // Returns Model Outputs and Other Outputs Required to Check Everything's Functional
-  return Rcpp::List::create(Rcpp::Named("E_Output") = E_output,
-                            Rcpp::Named("L_Output") = L_output,
-                            Rcpp::Named("P_Output") = P_output,
-                            Rcpp::Named("M_Output") = M_output,
-                            Rcpp::Named("K_Rain") = k_rain_output,
-                            Rcpp::Named("K_Static") = k_static_output,
-                            Rcpp::Named("K_Total") = k_total_output,
-                            Rcpp::Named("rainfallaverage_Kstatic") = average_rainfall_K_Static,
-                            Rcpp::Named("prior K") = prior_K_Static_values,
-                            Rcpp::Named("new_exp_static") = Exponential_Weighting_Factors_Static,
-                            Rcpp::Named("new_exp_rainfall") = Exponential_Weighting_Factors_Rainfall,
-                            Rcpp::Named("exponential_normaliser") = Exponential_Normalisation_Factors_Rainfall);
+  if(full_output == 0) {
+    return Rcpp::List::create(Rcpp::Named("E_Output") = E_output,
+                              Rcpp::Named("L_Output") = L_output,
+                              Rcpp::Named("P_Output") = P_output,
+                              Rcpp::Named("M_Output") = M_output);
+  }
+  else if(full_output == 1) {
+    return Rcpp::List::create(Rcpp::Named("E_Output") = E_output,
+                              Rcpp::Named("L_Output") = L_output,
+                              Rcpp::Named("P_Output") = P_output,
+                              Rcpp::Named("M_Output") = M_output,
+                              Rcpp::Named("K_Rain") = k_rain_output,
+                              Rcpp::Named("K_Static") = k_static_output,
+                              Rcpp::Named("K_Total") = k_total_output,
+                              Rcpp::Named("rainfallaverage_Kstatic") = average_rainfall_K_Static,
+                              Rcpp::Named("prior K") = prior_K_Static_values,
+                              Rcpp::Named("new_exp_static") = Exponential_Weighting_Factors_Static,
+                              Rcpp::Named("new_exp_rainfall") = Exponential_Weighting_Factors_Rainfall,
+                              Rcpp::Named("exponential_normaliser") = Exponential_Normalisation_Factors_Rainfall,
+                              Rcpp::Named("within_loop") = temp_vector_Exponential_Weighting_Factors_Rainfall,
+                              Rcpp::Named("outside_loop")= Exponential_Weighting_Factors_Rainfall);
+  }
 }
+
+//' @export
+// [[Rcpp::export]]
+double Hill_Function(double rainfall, double K_max, double a, double b) {
+  double output = K_max / (1 + pow((rainfall / a), b));
+  return(output);
+}
+
+//' @export
+// [[Rcpp::export]]
+std::vector <int> initial_state_sample(Rcpp::NumericVector fitted_parameters,
+                                       Rcpp::NumericVector static_parameters,
+                                       Rcpp::String mortality_density_function) {
+
+  // Setting Required Parameters
+  double dE = 1/fitted_parameters[0]; double dL = 1/fitted_parameters[1]; double dP = 1/fitted_parameters[2];
+  double muE0 = fitted_parameters[3]; double muL0 = fitted_parameters[4]; double muP = fitted_parameters[5]; double muM = fitted_parameters[6];
+  double lambda = fitted_parameters[7]; double beta = fitted_parameters[8];
+  double z = fitted_parameters[11];
+
+  // Initialising initial conditions for storage of output
+  int E; int L; int P; int M;
+
+  if (mortality_density_function == "power") { // needs to be modified to include dd_pow
+
+    // Power Density Dependence
+    double a = (beta * dP * dL) / ((2 * muM) * (muP + dP));
+    double b = (muE0 / (lambda * muL0)) * (dL + muL0) - dE - muE0;
+    double c = -(muE0 * dE) / (muL0 * lambda);
+    double x = (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
+
+    // Initial Conditions
+    L = round(z);
+    E = round(L / x);
+    P = round((dL * L) / (muP + dP));
+    M = round((dP * P) / (2 * muM));
+
+  }
+
+  // else if (mortality_density_function == "exponential") {
+  //
+  //   //Exponential Density Dependence
+  //   double a = (0.5 * dL * dP) / (muM * (dP + muP));
+  //
+  //   // Initial Conditions
+  //   E = round(((beta * a) * round(z)) / ((dE + (beta * a) + muE)));
+  //   L = round((dE * round(z)) / ((dE + dL + muL)));
+  //   M = round((0.5 * dL * dP * L) / (muM * (dP + muP)));
+  //   P = round((2 * muM * M) / dP);
+  //
+  // }
+
+  else if (mortality_density_function == "linear") {
+
+    // Linear Density Dependence
+    double a = (beta * dP * dL) / ((2 * muM) * (muP + dP));
+    double b = (muE0 / (lambda * muL0)) * (dL + muL0) - dE - muE0;
+    double c = -(muE0 * dE) / (muL0 * lambda);
+    double x = (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
+
+    // Initial Conditions
+    L = round(z);
+    E = round(L / x);
+    P = round((dL * L) / (muP + dP));
+    M = round((dP * P) / (2 * muM));
+
+  }
+
+  std::vector<int> output = {E, L, P, M};
+  return(output);
+
+}
+
+
 

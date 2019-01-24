@@ -8,17 +8,23 @@
 #include <iostream>
 
 // Functions Contained Within File mosquito_population_model.cpp
-double min_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData,
+double min_output_particle_filter(int N, std::vector <int> obsData,
                                   Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters,
+                                  std::vector <double> rainfall,
                                   Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship,
                                   Rcpp::String rainfall_effect, Rcpp::String decline_type,
-                                  double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice);
+                                  double sampling_point, Rcpp::StringVector offset_month_vector,
+                                  Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice,
+                                  Rcpp::String calc_inside_mosquito_model);
 
-Rcpp::List full_output_particle_filter(int N, std::vector <double> rainfall, std::vector <int> obsData,
+Rcpp::List full_output_particle_filter(int N, std::vector <int> obsData,
                                        Rcpp::NumericVector fitted_parameters, Rcpp::NumericVector static_parameters,
+                                       std::vector <double> rainfall,
                                        Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship,
                                        Rcpp::String rainfall_effect, Rcpp::String decline_type,
-                                       double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice);
+                                       double sampling_point, Rcpp::StringVector offset_month_vector,
+                                       Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice,
+                                       Rcpp::String calc_inside_mosquito_model);
 
 double Negative_Binomial(double k, double n, double r, double p);
 

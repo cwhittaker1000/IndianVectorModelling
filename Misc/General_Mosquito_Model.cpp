@@ -65,7 +65,8 @@ Rcpp::List general_mosquito_population_model(int start_time, int end, // Start a
                                              std::vector<double> input_Exponential_Weighting_Factors_Static, // Related to calc_inside_mosquito_model
                                              std::vector<double> input_Exponential_Weighting_Factors_Rainfall, // Related to calc_inside_mosquito_model
                                              std::vector<double> input_Exponential_Normalisation_Factors_Static, // Related to calc_inside_mosquito_model
-                                             std::vector<double> input_Exponential_Normalisation_Factors_Rainfall) { // Related to calc_inside_mosquito_model
+                                             std::vector<double> input_Exponential_Normalisation_Factors_Rainfall, // Related to calc_inside_mosquito_model
+                                             int full_output) { // Specifies whether to output lots of things or just model compartment outputs
 
 
   ///////////////////////////////////////////////////////////////////
@@ -173,10 +174,10 @@ Rcpp::List general_mosquito_population_model(int start_time, int end, // Start a
   double temp_rain_weighting_factor;
   double temp_static_normalisation_factor;
   double temp_rain_normalisation_factor;
-  std::vector<double> temp_vector_Exponential_Weighting_Factors_Static;
-  std::vector<double> temp_vector_Exponential_Weighting_Factors_Rainfall;
-  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Static;
-  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Rainfall;
+  std::vector<double> temp_vector_Exponential_Weighting_Factors_Static;  // These are not superfluous- produces different results if I'm adding to the
+  std::vector<double> temp_vector_Exponential_Weighting_Factors_Rainfall; // vector directly as opposed to creating a temporary one and then copying the
+  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Static; // results over after the temporary one has been filled.
+  std::vector<double> temp_vector_Exponential_Normalisation_Factors_Rainfall;  // ASK RICH WHY THIS IS!!!!
   std::vector<double> Exponential_Weighting_Factors_Static;
   std::vector<double> Exponential_Weighting_Factors_Rainfall;
   std::vector<double> Exponential_Normalisation_Factors_Static;
@@ -728,17 +729,27 @@ Rcpp::List general_mosquito_population_model(int start_time, int end, // Start a
   // Rcpp::Rcout << "Step 4: Model Running COMPLETE" << std::endl;
 
   // Returns Model Outputs and Other Outputs Required to Check Everything's Functional
-  return Rcpp::List::create(Rcpp::Named("E_Output") = E_output,
-                            Rcpp::Named("L_Output") = L_output,
-                            Rcpp::Named("P_Output") = P_output,
-                            Rcpp::Named("M_Output") = M_output,
-                            Rcpp::Named("K_Rain") = k_rain_output,
-                            Rcpp::Named("K_Static") = k_static_output,
-                            Rcpp::Named("K_Total") = k_total_output,
-                            Rcpp::Named("rainfallaverage_Kstatic") = average_rainfall_K_Static,
-                            Rcpp::Named("prior K") = prior_K_Static_values,
-                            Rcpp::Named("new_exp_static") = Exponential_Weighting_Factors_Static,
-                            Rcpp::Named("new_exp_rainfall") = Exponential_Weighting_Factors_Rainfall,
-                            Rcpp::Named("exponential_normaliser") = Exponential_Normalisation_Factors_Rainfall);
+  if(full_output == 0) {
+    return Rcpp::List::create(Rcpp::Named("E_Output") = E_output,
+                              Rcpp::Named("L_Output") = L_output,
+                              Rcpp::Named("P_Output") = P_output,
+                              Rcpp::Named("M_Output") = M_output);
+  }
+  else if(full_output == 1) {
+    return Rcpp::List::create(Rcpp::Named("E_Output") = E_output,
+                              Rcpp::Named("L_Output") = L_output,
+                              Rcpp::Named("P_Output") = P_output,
+                              Rcpp::Named("M_Output") = M_output,
+                              Rcpp::Named("K_Rain") = k_rain_output,
+                              Rcpp::Named("K_Static") = k_static_output,
+                              Rcpp::Named("K_Total") = k_total_output,
+                              Rcpp::Named("rainfallaverage_Kstatic") = average_rainfall_K_Static,
+                              Rcpp::Named("prior K") = prior_K_Static_values,
+                              Rcpp::Named("new_exp_static") = Exponential_Weighting_Factors_Static,
+                              Rcpp::Named("new_exp_rainfall") = Exponential_Weighting_Factors_Rainfall,
+                              Rcpp::Named("exponential_normaliser") = Exponential_Normalisation_Factors_Rainfall,
+                              Rcpp::Named("within_loop") = temp_vector_Exponential_Weighting_Factors_Rainfall,
+                              Rcpp::Named("outside_loop")= Exponential_Weighting_Factors_Rainfall);
+  }
 }
 
