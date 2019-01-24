@@ -23,22 +23,14 @@
 ///  The code that comprises run_particle_MCMC is structured as follows:                              ///
 ///                                                                                                   ///
 ///       1) PARAMETER SETTING & INITIALISATION                                                       ///
-///       2) (optional) PERFORM COMPUTATIONALLY EXPENSIVE EXPONENTIAL CARRYING CAPACITIES OUTSIDE     ///
-///                     THE MAIN LOOP SO THAT IT ONLY NEEDS TO BE DONE ONCE. (ONLY REQUIRED IF THE    ///
-///                     CARRYING CAPACITY RELATIONSHIP FOR K_RAIN IS SET TO BE EXPONENTIAL- CAN       ///
-///                     BE DONE INSIDE THE MODEL OR OUTSIDE, IN THE PARTICLE FILTER).                 ///
-///       3) (optional) CALCULATE CARRYING CAPACITY FOR TIMEPOINT PRECEDING THE TIMEPOINTS FOR WHICH  ///
-///                     DATA IS AVAILABLE. DONE IN ORDER TO TRACK HOW RECENTLY PRIOR TO THE DATA      ///
-///                     WASHOUT WAS LIKELY TO HAVE OCCURRED. (ONLY REQUIRED IF WASHOUT IS OPERATING   ///
-///                     IN THE MODEL)                                                                 ///
-///       4) IMPLEMENTING THE ACTUAL METROPOLIS-HASTINGS ALGORITHM- PROPOSING NEW PARAMETERS,         ///
+///       2) IMPLEMENTING THE ACTUAL METROPOLIS-HASTINGS ALGORITHM- PROPOSING NEW PARAMETERS,         ///
 ///          EVALUATING THE POSTERIOR DENSITY OF THESE PARAMETERS, AND THEN DECIDING TO ACCEPT OR     ///
 ///          REJECT THESE PARAMETERS ACCORDING TO THE LIKELIHOOD RATIO I.E. IN A WAY THAT IS          ///
 ///          PROPORTIONAL TO THEIR POSTERIOR DENSITY COMPARED TO THE POSTERIOR DENSITY OF THE         ///
 ///          PREVIOUS PARAMETER SET.                                                                  ///
-///       5) ADAPTING THE COVARIANCE MATRIX CURRENTLY BEING USED TO PROPOSE PARAMETERS BASED          ///
+///       3) ADAPTING THE COVARIANCE MATRIX CURRENTLY BEING USED TO PROPOSE PARAMETERS BASED          ///
 ///          DEPENDING ON WHETHER OR NOT THE PARAMETERS PROPOSED PREVIOUSLY WERE ACCEPTED OR NOT.     ///
-///       6) (optional) PRINTING OUT VARIOUS USEFUL MCMC DIAGNOSTICS REALTIME WHILST THE MODEL IS     ///
+///       4) (optional) PRINTING OUT VARIOUS USEFUL MCMC DIAGNOSTICS REALTIME WHILST THE MODEL IS     ///
 ///          RUNNING                                                                                  ///
 ///                                                                                                   ///
 ///  Below the code for the Mosquito Population Model, there is code for two other functions,         ///
@@ -50,11 +42,9 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-// [[Rcpp::depends(RcppArmadillo)]]
+// Specifying the Includes and Depends Required
 #include "MCMC_Functions.hpp"
+// [[Rcpp::depends(RcppArmadillo)]]
 
 //' @export
 // [[Rcpp::export]]
@@ -79,36 +69,42 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
                              int print_output,  // WHehter or not to print out key diagnostics whilst running
                              Rcpp::String calc_inside_mosquito_model) {  // For exponential weighting relationship, where to calculate the exponential weighting factors
 
-  // Removing overdispersion parameter if choice of likelihood is Poisson
+  /////////////////////////////////////////////////////////////////////////////////
+  //                                                                             //
+  //  1.  Initialising Variables and Preparing Various Aspects to Run the MCMC   //
+  //                                                                             //
+  /////////////////////////////////////////////////////////////////////////////////
+
+  // This section of code initialises all the variables, storage vectors, storage matrices required to run the MCMC, and
+  // additionally does any general housekeeping to get everything in order before the MCMC is ran. This includes adapting
+  // the fitted_yn vector to set the overdispersion parameter to be false if the Poisson likelihood is chosen, creates a
+  // logical vector specifying which model parameters are to be fitted,
+
+  // Removing Overdispersion Parameter if Choice of Likelihood is Poisson
   if (likelihood_choice == "poisson") {
     fitted_yn["overdisp"] = false;
   }
 
-  // Storage for the MCMC chains, tracking acceptances/rejections etc
-  Rcpp::NumericMatrix MCMC_chain_output(number_of_iterations + 1, Rcpp::sum(fitted_yn));
-  Rcpp::NumericVector cholesky_decomp_failures(number_of_iterations + 1);
-  Rcpp::List covariance_matrix_failures(number_of_iterations + 1);
-  double acceptances = 0;
-  double rejections = 0;
-  Rcpp::NumericVector mu_tracker(Rcpp::sum(fitted_yn));
+  // Initialising the Objects, Vectors and Matrices Required to Store Outputs of Interest
+  Rcpp::NumericMatrix MCMC_chain_output(number_of_iterations + 1, Rcpp::sum(fitted_yn));  // stores MCMC output
+  Rcpp::NumericVector cholesky_decomp_failures(number_of_iterations + 1); // tracks Cholesky Decomposition failures (matrices that can't be inverted)
+  Rcpp::List covariance_matrix_failures(number_of_iterations + 1); // stores covariances matrices for which the Cholesky Decomposition fails
+  Rcpp::NumericVector post_adapt_acceptance_ratio_tracker(number_of_iterations + 1); // Stores acceptance ratio at each point following starting adaptation
+  Rcpp::NumericVector total_acceptance_ratio_tracker(number_of_iterations + 1); // Tracks the overall acceptance ratio at each point
+  Rcpp::NumericVector accepted_status_checker(number_of_iterations + 1); // Tracks whether each proposal was rejected or not
+  double current_acceptance_ratio = 0; // Tracks current acceptance ratio
+  double acceptances = 0; // Tracks number of acceptances
+  double rejections = 0; // Tracks number of rejections
+  int cov_fail_counter = 0; // Counter to track number of times covariance matrix cannot be Cholesky decomposed
+  double acceptances_adapt_only = 0; // Tracks number of acceptances since beginning adaptation
+  Rcpp::NumericMatrix latest_parameter_values_output(number_of_iterations + 1, Rcpp::sum(fitted_yn)); // compare to MCMC chans to make sure right stuff is being put in
 
-  double current_acceptance_ratio = 0;
-  Rcpp::NumericVector total_acceptance_ratio_tracker(number_of_iterations + 1);
-  Rcpp::NumericVector accepted_checker(number_of_iterations + 1);
-  Rcpp::NumericVector accepted_status_checker(number_of_iterations + 1);
-
-  double acceptances_adapt_only = 0;
-  double cooldown;
-  Rcpp::NumericVector post_adapt_acceptance_ratio_tracker(number_of_iterations + 1);
-
-  // Storage for things that generate flexibility in choosing which parameters to fit
-  Rcpp::StringVector parameter_names = fitted_yn.names();
-  Rcpp::StringVector naming(Rcpp::sum(fitted_yn));
-  Rcpp::NumericVector indexer(Rcpp::sum(fitted_yn));
-  Rcpp::NumericMatrix latest_parameter_values_output(number_of_iterations + 1, Rcpp::sum(fitted_yn));
-
-  // Assigning initial values to the first row of the MCMC output and naming that output's columns
+  // Generates an indexer from which to access fitted parameters from full parameters vector, fills the names vector with
+  // parameters that are to be fitted, and fills the first row of the MCMC output
   int p = 0;
+  Rcpp::StringVector parameter_names = fitted_yn.names(); // vector of the names of all parameters in the logical vector fitted_yn
+  Rcpp::StringVector naming(Rcpp::sum(fitted_yn)); // vector to contain only the names of those parameters that are being fitted
+  Rcpp::NumericVector indexer(Rcpp::sum(fitted_yn)); // inf
   for (int d = 0; d < fitted_yn.size(); d++) {
     if (fitted_yn[d] == TRUE) {
       Rcpp::String to_be_added = parameter_names[d];
@@ -121,12 +117,11 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
   colnames(MCMC_chain_output) = naming;
 
   // Defining variables involved in the Adaptive MCMC part
-  double accepted_variable;
-  arma::mat current_covariance_matrix(Rcpp::sum(fitted_yn), Rcpp::sum(fitted_yn));
-  for (int x = 0; x < Rcpp::sum(fitted_yn); x++) {
-
+  double current_scaling_factor = 1;
+  arma::mat current_mu(1, Rcpp::sum(fitted_yn)); // initialised later on with the MCMC chain values at the iteration number when adaptation starts
+  arma::mat current_covariance_matrix(Rcpp::sum(fitted_yn), Rcpp::sum(fitted_yn)); // fills the covariance matrix diagonalswith the sds vector
+  for (int x = 0; x < Rcpp::sum(fitted_yn); x++) {                                 // for those parameters that are being fitted
     int index = indexer[x];
-
     for (int y = 0; y < Rcpp::sum(fitted_yn); y++) {
       if (y == x) {
         current_covariance_matrix(x, y) = initial_sds[index];
@@ -136,28 +131,11 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
       }
     }
   }
-  arma::mat initial_covariance_matrix_checker = current_covariance_matrix;
+  double accepted_variable; // tracks whether most recent parameters were accepted or rejected
+  double cooldown; // The cooldown factor in the covariance matrix adaptation algorithm
+  arma::mat initial_covariance_matrix_checker = current_covariance_matrix; // checks the covariance matrix is being initialised properly
 
-  //NOT SURE THIS IS WHAT I WANT TO BE ASSIGNING AS THE INITIAL VALUES FOR MU TBH.
-  // this needs to be a ROW VECTOR at any rate
-  // Update: Have moved the current_mu assignment to when adaptation starts i.e. will use chain
-  // values at that point
-  arma::mat current_mu(1, Rcpp::sum(fitted_yn));
-  // for (int x = 0; x < Rcpp::sum(fitted_yn); x++) {
-  //   int specific_index = indexer[x];
-  //   current_mu(0, x) = model_parameters[specific_index];
-  // }
-  // arma::mat initial_mu_checker = current_mu;
-  // Rcpp::Rcout << "The current mu is" << current_mu << std::endl;
-  double current_scaling_factor = 1;
-
-  // for (int x = 0; x < Rcpp::sum(fitted_yn); x++) {
-  //   int specific_index = indexer[x];
-  //   current_mu(0, x) = model_parameters[specific_index];
-  // }
-  // arma::mat initial_mu_checker = current_mu;
-
-  // Calculating the posterior likelihood for the initial parameter values
+  // Calculating the Posterior Density for the Initial Parameter Values
   double current_posterior_likelihood = posterior(N, obsData,
                                                   model_parameters, static_parameters,
                                                   rainfall,
@@ -166,12 +144,13 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
                                                   rainfall_effect, decline_type,
                                                   sampling_point, offset_month_vector,
                                                   sampling_month_vector, likelihood_choice,
-                                                  calc_inside_mosquito_model); // whole bunch of inputs here, see if I can streamline this
+                                                  calc_inside_mosquito_model);
 
   // Creating a vector to store and sequentially update model parameters as the MCMC iterates
-  Rcpp::NumericVector model_parameters_for_MCMC(28);
+  Rcpp::NumericVector model_parameters_for_MCMC(model_parameters.size()); // NOTE: this needs to be the length of the model_parameters vector. Change 29 to model_parameters.size()
 
   // Actual Model Parameters - See General_Mosquito_Model for Description of Which Parameter is at Which Position
+  // THIS MIGHT BE SUPERFLUOUS
   model_parameters_for_MCMC[0] = model_parameters[0]; model_parameters_for_MCMC[1] = model_parameters[1]; model_parameters_for_MCMC[2] = model_parameters[2];
   model_parameters_for_MCMC[3] = model_parameters[3]; model_parameters_for_MCMC[4] = model_parameters[4]; model_parameters_for_MCMC[5] = model_parameters[5];
   model_parameters_for_MCMC[6] = model_parameters[6]; model_parameters_for_MCMC[7] = model_parameters[7]; model_parameters_for_MCMC[8] = model_parameters[8];
@@ -180,25 +159,27 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
   model_parameters_for_MCMC[15] = model_parameters[15]; model_parameters_for_MCMC[16] = model_parameters[16]; model_parameters_for_MCMC[17] = model_parameters[17];
   model_parameters_for_MCMC[18] = model_parameters[18]; model_parameters_for_MCMC[19] = model_parameters[19]; model_parameters_for_MCMC[20] = model_parameters[20];
   model_parameters_for_MCMC[21] = model_parameters[21]; model_parameters_for_MCMC[22] = model_parameters[22]; model_parameters_for_MCMC[23] = model_parameters[23];
+  model_parameters_for_MCMC[24] = model_parameters[24];
 
   // E, L, P, M and Offset - these values are calculated within the Particle Filter function and the Values Added In There. 0 is just a placeholder!
-  model_parameters_for_MCMC[24] = 0; model_parameters_for_MCMC[25] = 0; model_parameters_for_MCMC[26] = 0; model_parameters_for_MCMC[27] = 0;
+  model_parameters_for_MCMC[25] = 0; model_parameters_for_MCMC[26] = 0; model_parameters_for_MCMC[27] = 0; model_parameters_for_MCMC[28] = 0;
 
-  // Rcpp::NumericVector model_parameters_for_MCMC = Rcpp::NumericVector::create(Rcpp::Named("dE") = model_parameters[0], Rcpp::Named("dL") = model_parameters[1],
-  //                                                                             Rcpp::Named("dP") = model_parameters[2], Rcpp::Named("muE0") = model_parameters[3],
-  //                                                                             Rcpp::Named("muL0") = model_parameters[4], Rcpp::Named("muP") = model_parameters[5],
-  //                                                                             Rcpp::Named("muM") = model_parameters[6], Rcpp::Named("lambda") = model_parameters[7],
-  //                                                                             Rcpp::Named("tau") = model_parameters[8], Rcpp::Named("beta") = model_parameters[9],
-  //                                                                             Rcpp::Named("overdisp") = model_parameters[10], Rcpp::Named("pop_frac") = model_parameters[11],
-  //                                                                             Rcpp::Named("scaling_factor") = model_parameters[12], Rcpp::Named("z") = model_parameters[13],
-  //                                                                             Rcpp::Named("K_static") = model_parameters[14], Rcpp::Named("K_max") = model_parameters[15],
-  //                                                                             Rcpp::Named("hill_1") = model_parameters[16], Rcpp::Named("hill_2") = model_parameters[17],
-  //                                                                             Rcpp::Named("E") = 0.0, Rcpp::Named("L") = 0.0,
-  //                                                                             Rcpp::Named("P") = 0.0, Rcpp::Named("M") = 0.0);
-  int cov_fail_counter = 0;
-  // Iterating over each parameter for a specified number of iterations
+  ///////////////////////////////////////////////////////////////////////
+  //                                                                   //
+  //  2.  Implementing Metropolis-Hastings Particle Filter Algorithm   //
+  //                                                                   //
+  ///////////////////////////////////////////////////////////////////////
+
+  // This section of code implements the Particle MCMC algorithm. Specifically, it proposes a new set of parameters based on the
+  // values currently in the MCMC chain. It then evaluates the Posterior Density of these new values and then either accepts or
+  // rejects these values based upon the ratio of the Posterior Density for the current and proposed parameter values. The
+  // next row of the MCMC chain is then filled with either the proposed values, or the current values, depending on whether the
+  // proposed values were accepted or rejected.
+
+  // Running the MCMC number_of_iterations times
   for (int i = 0; i < number_of_iterations; i++) {
 
+    // Checking whether any of the covariance matrix eigenvalues are < 0 and hence the Cholesky Decomposition will fail
     arma::vec eigenvalues = arma::eig_sym(current_covariance_matrix);
     if (eigenvalues.min() <= 0.0) {
       cholesky_decomp_failures[i] = 1;
@@ -206,13 +187,11 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
       cov_fail_counter = cov_fail_counter + 1;
     }
 
-    // Generating the proposed parameter values
-    // CURRENT_PARAMETER_VALUES needs to be a ROW VECTOR!!!!
+    // Generating the Proposed Parameter Values
     arma::mat current_parameter_values(1, Rcpp::sum(fitted_yn));
     for (int u = 0; u < Rcpp::sum(fitted_yn); u++) {
-      current_parameter_values(0, u) = MCMC_chain_output(i, u);
+      current_parameter_values(0, u) = MCMC_chain_output(i, u); // Note: current_parameter_values needs to be a row vector
     }
-
     //Rcpp::Rcout << "The iteration number is " << i << std::endl;
     //Rcpp::Rcout << "The current parameter values are" << current_parameter_values << std::endl;
     //Rcpp::Rcout << "The current covariance matrix is " << current_covariance_matrix << std::endl;
@@ -221,33 +200,25 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
     arma::mat proposed_parameter_values = mvrnormArma(current_parameter_values, current_covariance_matrix);
     //Rcpp::Rcout << "I've actually made it past the MVN call- weird!" << std::endl;
 
-    // Filling input parameter vector with the output from the proposal function. Fixed parameters remain unchanged.
+    // Filling the Parameter Vector with the Output from the Proposal Function. Fixed Parameters Remain Unchanged.
     for (int k = 0; k < indexer.size(); k++) {
       int index_for_adding = indexer[k];
       model_parameters_for_MCMC[index_for_adding] = proposed_parameter_values[k];
     }
 
-    // This might be superfluous
-    Rcpp::StringVector names(28);
+    // Naming the Parameter Vector contents so that it plays nicely with all the other model/particle filter functions (Might be superfluous)
+    Rcpp::StringVector names(29); // has to be number of parameters - i.e. whatever index M is + 1 (because C++ indexing starts from 0)
     names[0] = "dE"; names[1] = "dL"; names[2] = "dP"; names[3] = "muE0"; names[4] = "muL0"; names[5] = "muP"; names[6] = "muM";
     names[7] = "lambda"; names[8] = "beta"; names[9] = "overdisp"; names[10] = "pop_frac"; names[11] = "z";
     names[12] = "tau_rainfall"; names[13] = "scaling_factor_rainfall"; names[14] = "K_Max_Rain"; names[15] = "Hill_Rainfall_1"; names[16] = "Hill_Rainfall_2";
-    names[17] = "tau_static"; names[18] = "scaling_factor_static"; names[19] = "K_Max_Static"; names[20] = "Washout_Threshold"; names[21] = "washout_exp_scaling_factor";
-    names[22] = "washout_hill_one"; names[23] = "washout_hill_two";
-    names[24] = "E"; names[25] = "L"; names[26] = "P"; names[27] = "M";
+    names[17] = "tau_static"; names[18] = "scaling_factor_static"; names[19] = "K_Max_Static"; names[20] = "Washout_Occurrence", names[21] = "Washout_Threshold";
+    names[22] = "washout_exp_scaling_factor"; names[23] = "washout_hill_one"; names[24] = "washout_hill_two";
+    names[25] = "E"; names[26] = "L"; names[27] = "P"; names[28] = "M";
     model_parameters_for_MCMC.names() = names;
 
-    // Manually handling instances when proposed overdispersion value is less than or equal to 0
-    // DOUBLE CHECKED AND FAIRLY CERTAIN THE BELOW ISSUE IS SOLVED :)
-    // CURRENTLY THIS CHANGES THE MODEL INPUT BUT DOESN'T CHANGE WHAT GETS ADDED TO THE MCMC OUTPUT
-    // IF THE PROPOSED VALUE IS ACCEPTED- THAT IS STILL WHAT WAS INITIALLY PROPOSED AND CONTAINED
-    // WITHIN "PROPOSED_PARAMETERS". THINK THE SOLUTION IS TO USE INDEXER AND ADD TO MCMC_OUTPUT
-    // FROM MODEL_PARAMETERS_FOR_MCMC DIRECTLY.
-    // think I've solved this by changing line 206 such that the parameter value is added
-    // from the model_parameters_for_MCMC using indexer rather than directly from the proposed_parameters
-    // vector which actually isn't ever altered from the set of parameters proposed.
-    // Consider adding a for loop in here that basically loops over the entire vector, and if it sees any instances
-    // of 0, changes them to a very very small number.
+    // Manually handling instances when proposed values are outside of range that can be handled by the model
+        // Consider adding some sort of loop in here that basically loops over the vector, and if it sees any instances
+        // of 0 for these parameters, changes them to a very very small number.
     if (model_parameters_for_MCMC["dP"] <= 0) {
       model_parameters_for_MCMC["dP"] = 0.01;
     }
@@ -291,53 +262,44 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
       model_parameters_for_MCMC["K_Max_Static"] = 0;
     }
 
-    // Assessing the likelihood of the proposed parameter value compared to the current parameter value
+    // Evaluating the Posterior Density of the Proposed Parameters, the Likelihood Ratio and then Whether to Accept the Proposed Values
     double proposed_posterior_likelihood = posterior(N, obsData,
                                                      model_parameters_for_MCMC, static_parameters,
                                                      rainfall, fitted_yn,
                                                      mortality_density_function, rainfall_relationship, rainfall_effect, decline_type,
                                                      sampling_point, offset_month_vector, sampling_month_vector,
                                                      likelihood_choice, calc_inside_mosquito_model);
-
     double likelihood_ratio = exp(proposed_posterior_likelihood - current_posterior_likelihood);
 
-    // Deciding whether to accept or reject, updating chain and current_posterior_likelihood as appropriate
+    // If accepted, add the proposed parameters to the next row of the MCMC chain
     if(R::runif(0, 1) < likelihood_ratio) {
-
-      // Taking arma mat output proposed parameter values and sequentially adding the results to next row of
-      // the MCMC chain (if these parameter values were accepted)
       for (int u = 0; u < proposed_parameter_values.size(); u++) {
         int index_for_adding = indexer[u];
         MCMC_chain_output(i + 1, u) = model_parameters_for_MCMC[index_for_adding];
       }
       current_posterior_likelihood = proposed_posterior_likelihood;
       acceptances = acceptances + 1;
-      accepted_checker[i] = 2;
       accepted_variable = 1;
     }
+    // If rejected, add the current parameters to the next row of the MCMC chain
     else {
-
-      // Taking arma mat output current parameter values and sequentially adding these same parameter values
-      // to next row of the MCMC chain (as the proposed parameters were rejected)
       for (int u = 0; u < current_parameter_values.size(); u++) {
         MCMC_chain_output(i + 1, u) = current_parameter_values[u];
       }
       current_posterior_likelihood = current_posterior_likelihood; // remove this as it's superfluous- just to tell myself what's going on
       rejections = rejections + 1;
-      accepted_checker[i] = 1;
       accepted_variable = 0;
     }
 
-    // Tracking the acceptance ratio
+    // Tracking the Acceptance Ratio and Other Related Diagnostics
     current_acceptance_ratio = (acceptances / (i + 1));
     total_acceptance_ratio_tracker[i] = current_acceptance_ratio;
-
     accepted_status_checker[i] = accepted_variable;
 
 
     //////////////////////////////////////////////////////////////////////
     //                                                                  //
-    //  4.  Adapting the Covariance Matrix Used to Propose Parameters   //
+    //  3.  Adapting the Covariance Matrix Used to Propose Parameters   //
     //                                                                  //
     //////////////////////////////////////////////////////////////////////
 
@@ -409,7 +371,7 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
 
     //////////////////////////////////////////////////////////////////////
     //                                                                  //
-    //  5.  (optional) Print Out Various Useful MCMC Diagnostics        //
+    //  4.  (optional) Print Out Various Useful MCMC Diagnostics        //
     //                                                                  //
     //////////////////////////////////////////////////////////////////////
 
@@ -436,7 +398,6 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
   return(Rcpp::List::create(Rcpp::Named("MCMC_Output") = MCMC_chain_output,
                             Rcpp::Named("Acceptance_Ratio_Total") = current_acceptance_ratio,
                             Rcpp::Named("Acceptance_Ratio_Post_Adapt") = post_adapt_acceptance_ratio_tracker,
-                            Rcpp::Named("Acceptance_Checker") = accepted_checker,
                             Rcpp::Named("Acceptances_Post_Adapt") = acceptances_adapt_only,
                             Rcpp::Named("Acceptances_Total")= acceptances,
                             Rcpp::Named("Accepted_Variable_Checker") = accepted_status_checker,
