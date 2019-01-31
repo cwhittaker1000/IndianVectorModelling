@@ -197,7 +197,8 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
     //Rcpp::Rcout << "The current covariance matrix is " << current_covariance_matrix << std::endl;
     //Rcpp::Rcout << "The current lowest eigenvalue is " << eigenvalues.min() << std::endl;
     //Rcpp::Rcout << "The number of failures so far is" << cov_fail_counter << std::endl;
-    arma::mat proposed_parameter_values = mvrnormArma(current_parameter_values, current_covariance_matrix);
+    arma::mat transposed_current_parameter_values = current_parameter_values.t(); // mvrnormArma now needs a column vector, so tranpose require
+    arma::mat proposed_parameter_values = mvrnormArma(transposed_current_parameter_values, current_covariance_matrix);
     //Rcpp::Rcout << "I've actually made it past the MVN call- weird!" << std::endl;
 
     // Filling the Parameter Vector with the Output from the Proposal Function. Fixed Parameters Remain Unchanged.
