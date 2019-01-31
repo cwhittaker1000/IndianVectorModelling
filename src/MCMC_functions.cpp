@@ -204,7 +204,7 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
 
   // Initialising variables required for the Cholesky Decomposition
   int ncols = sigma.n_cols;
-  arma::mat Y = arma::randn(ncols, 1);
+  arma::mat Y = arma::randn(ncols, 1); // ncols x 1 matrix (column vector basically)
 
   //Rcpp::Rcout << "The column vector of normals is " << Y << std::endl;
 
@@ -220,8 +220,8 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
   //         eigenvalues to 0.01. Then do the Eigendecomposition
   arma::vec eigenvalues_calc;
   arma::mat eigenvectors_calc;
-  eig_sym(eigenvalues_calc, eigenvectors_calc, sigma);
-  double minimum = eigenvalues_calc.min();
+  eig_sym(eigenvalues_calc, eigenvectors_calc, sigma);  // calculating eigenvectors and eigenvalues for the covariance matrix
+  double minimum = eigenvalues_calc.min();  // calculating the minimum eigenvalue to check invertibility
 
   /////////////////////////////////////////////////////////////////////
   //                                                                 //
@@ -253,8 +253,8 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
 
     // Perform the eigendecomposition then use it to sample from the MVN
     arma::mat eigenvalue_decomposition = eigenvectors_calc * arma::sqrt(eigenvalue_diagonal_matrix);
-    arma::mat MVN_samples = mu + eigenvalue_decomposition * Y;
-    arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column, so trapose to create a row
+    arma::mat MVN_samples = mu + eigenvalue_decomposition * Y; // mu is ncols x 1, eigenvalue_decomposition is ncols x ncols & Y is ncols x 1
+    arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column (ncols x 1), so trapose to create a row (1 x ncols)
 
     for (int i = 0; i < actual_MVN_samples.size(); i++) {
       if (actual_MVN_samples(0, i) < 0) { // don't want negative numbers so sets any negative proposed numbers to 0
@@ -273,27 +273,32 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
 
   if (minimum <= 0.0) { // where the matrix does have negative eigenvalues and hence is non-invertible
     arma::mat changed_sigma = sigma; // initialising new matrix with sigma's values so that it can be adapted and not alter the original sigma
+
     for (int i = 0; i < ncols; i++) {
       for (int j = 0; j < ncols; j++) {
         if (i == j) {
-          changed_sigma(i,j) = changed_sigma(i, j) + 0.01 * changed_sigma(i, j);
+          changed_sigma(i,j) = changed_sigma(i, j) + 0.01 * changed_sigma(i, j); // add some to diagonal to try and make invertible
         }
       }
     }
-    arma::vec new_eigenvalues_calc = arma::eig_sym(changed_sigma);
-    double new_minimum = new_eigenvalues_calc.min();
+
+    arma::vec new_eigenvalues_calc = arma::eig_sym(changed_sigma);  // check the eigenvalues of the
+    double new_minimum = new_eigenvalues_calc.min();                // augemented matrix
+
     if (new_minimum <= 0.0) {
       for (int i = 0; i < ncols; i++) {
         for (int j = 0; j < ncols; j++) {
           if (i == j) {
-            changed_sigma(i,j) = changed_sigma(i, j) + 0.1 * changed_sigma(i, j);
+            changed_sigma(i,j) = changed_sigma(i, j) + 0.1 * changed_sigma(i, j);  // if the above didn't work, add some more to the diagonal
           }
         }
       }
     }
-    arma::vec new_new_eigenvalues_calc = arma::eig_sym(changed_sigma);  // does this need to be nested in the same way the new_minimum bit is nested in the original loop
-    double new_new_minimum = new_new_eigenvalues_calc.min();
-    if (new_new_minimum > 0) {  // implies addition of a small amount has made the matrix invertible now
+
+    arma::vec new_new_eigenvalues_calc = arma::eig_sym(changed_sigma);  // check the eigenvalues of the
+    double new_new_minimum = new_new_eigenvalues_calc.min();            // augmented matrix
+
+    if (new_new_minimum > 0) {  // implies addition of a small amount has made the matrix invertible now, cholesky possible
       arma::mat MVN_samples = mu + arma::chol(changed_sigma) * Y;  // mu is a ncols x 1 column matrix, cholesky is ncols x ncols, Y is ncols x 1
       arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column, so trapose to create a row
       for (int i = 0; i < actual_MVN_samples.size(); i++) {
@@ -304,12 +309,11 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
       return(actual_MVN_samples);
     }
 
-    else if (new_new_minimum == 0) { // do an eigendecomposition on the adapted covariance matrix that has lowest eigenvalue 0 now
+    else if (new_new_minimum == 0) { // do an eigendecomposition on the augmented covariance matrix that has lowest eigenvalue 0 now
 
       arma::vec zero_eigenvalues_calc;
       arma::mat zero_eigenvectors_calc;
       eig_sym(zero_eigenvalues_calc, zero_eigenvectors_calc, changed_sigma);
-      double zero_minimum = zero_eigenvalues_calc.min();
 
       // Create diagional matrix full of zeroes and then fill it with the covariance matrix eigenvalues
       arma::mat zero_eigenvalue_diagonal_matrix = arma::zeros(ncols, ncols); // check that the eigenvalues are added as doubles, not integers
@@ -333,10 +337,11 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
     //                                                                        //
     //  3.  If that still doesn't work, changing the eigenvectors to a small  //
     //      positive number and then doing the eigendecomposition.            //
+    //      (http://www2.gsu.edu/~mkteer/npdmatri.html)                       //
     //                                                                        //
     ////////////////////////////////////////////////////////////////////////////
 
-    else {
+    else { // augmenting matrix still hasn't worked, eigenvalues still < 0, different approach required
       for (int i = 0; i < ncols; i++) {
           if (eigenvalues_calc[i] <= 0.0) {
             eigenvalues_calc[i] = 0.01;
@@ -360,7 +365,9 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
       return(actual_MVN_samples);
     }
   }
-  else {  // for instances where the covariance matrix is invertible and so I can sample using the CHolesky Decomposition directly
+
+  // For instances where the covariance matrix is invertible, can sample using the CHolesky Decomposition directly
+  else {
     arma::mat MVN_samples = mu + arma::chol(sigma) * Y;
     arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column, so trapose to create a row
     for (int i = 0; i < actual_MVN_samples.size(); i++) {
