@@ -86,7 +86,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // mvrnormArma
-arma::mat mvrnormArma(arma::mat mu, arma::mat sigma);
+Rcpp::List mvrnormArma(arma::mat mu, arma::mat sigma);
 RcppExport SEXP _IndianVectorModelling_mvrnormArma(SEXP muSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -250,8 +250,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // run_particle_MCMC
-Rcpp::List run_particle_MCMC(int N, int start_sd_adaptation, int end_sd_adaptation, int number_of_iterations, std::vector <double> initial_sds, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, Rcpp::LogicalVector fitted_yn, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, int print_output, Rcpp::String calc_inside_mosquito_model);
-RcppExport SEXP _IndianVectorModelling_run_particle_MCMC(SEXP NSEXP, SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP number_of_iterationsSEXP, SEXP initial_sdsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP fitted_ynSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP print_outputSEXP, SEXP calc_inside_mosquito_modelSEXP) {
+Rcpp::List run_particle_MCMC(int N, int start_sd_adaptation, int end_sd_adaptation, int number_of_iterations, std::vector <double> initial_sds, Rcpp::NumericVector model_parameters, Rcpp::NumericVector static_parameters, Rcpp::LogicalVector fitted_yn, std::vector <double> rainfall, std::vector <int> obsData, Rcpp::String mortality_density_function, Rcpp::String rainfall_relationship, Rcpp::String rainfall_effect, Rcpp::String decline_type, double sampling_point, Rcpp::StringVector offset_month_vector, Rcpp::StringVector sampling_month_vector, Rcpp::String likelihood_choice, int print_output, Rcpp::String calc_inside_mosquito_model, int all_output);
+RcppExport SEXP _IndianVectorModelling_run_particle_MCMC(SEXP NSEXP, SEXP start_sd_adaptationSEXP, SEXP end_sd_adaptationSEXP, SEXP number_of_iterationsSEXP, SEXP initial_sdsSEXP, SEXP model_parametersSEXP, SEXP static_parametersSEXP, SEXP fitted_ynSEXP, SEXP rainfallSEXP, SEXP obsDataSEXP, SEXP mortality_density_functionSEXP, SEXP rainfall_relationshipSEXP, SEXP rainfall_effectSEXP, SEXP decline_typeSEXP, SEXP sampling_pointSEXP, SEXP offset_month_vectorSEXP, SEXP sampling_month_vectorSEXP, SEXP likelihood_choiceSEXP, SEXP print_outputSEXP, SEXP calc_inside_mosquito_modelSEXP, SEXP all_outputSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -275,7 +275,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::String >::type likelihood_choice(likelihood_choiceSEXP);
     Rcpp::traits::input_parameter< int >::type print_output(print_outputSEXP);
     Rcpp::traits::input_parameter< Rcpp::String >::type calc_inside_mosquito_model(calc_inside_mosquito_modelSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_particle_MCMC(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model));
+    Rcpp::traits::input_parameter< int >::type all_output(all_outputSEXP);
+    rcpp_result_gen = Rcpp::wrap(run_particle_MCMC(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model, all_output));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -295,7 +296,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_IndianVectorModelling_Poisson", (DL_FUNC) &_IndianVectorModelling_Poisson, 3},
     {"_IndianVectorModelling_Particle_Weight_Normalisation", (DL_FUNC) &_IndianVectorModelling_Particle_Weight_Normalisation, 1},
     {"_IndianVectorModelling_weighted_sampling_with_replacement", (DL_FUNC) &_IndianVectorModelling_weighted_sampling_with_replacement, 4},
-    {"_IndianVectorModelling_run_particle_MCMC", (DL_FUNC) &_IndianVectorModelling_run_particle_MCMC, 20},
+    {"_IndianVectorModelling_run_particle_MCMC", (DL_FUNC) &_IndianVectorModelling_run_particle_MCMC, 21},
     {NULL, NULL, 0}
 };
 

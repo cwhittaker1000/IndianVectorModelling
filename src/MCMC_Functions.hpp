@@ -27,6 +27,6 @@ Rcpp::List proposal_SD_adapter(double accepted_variable, double current_iteratio
                                double current_scaling_factor, arma::mat mu_previous, arma::mat current_parameter_values, // technically parameter values for t + 1 as the acceptance/rejection step precedes calling this function
                               arma::mat current_covariance_matrix);
 
-arma::mat mvrnormArma(arma::mat mu, arma::mat sigma);
+Rcpp::List mvrnormArma(arma::mat mu, arma::mat sigma);
 
 #endif

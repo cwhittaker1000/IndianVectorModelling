@@ -71,7 +71,7 @@ weighted_sampling_with_replacement <- function(n, prob, p_tot, K) {
 }
 
 #' @export
-run_particle_MCMC <- function(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model) {
-    .Call('_IndianVectorModelling_run_particle_MCMC', PACKAGE = 'IndianVectorModelling', N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model)
+run_particle_MCMC <- function(N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model, all_output) {
+    .Call('_IndianVectorModelling_run_particle_MCMC', PACKAGE = 'IndianVectorModelling', N, start_sd_adaptation, end_sd_adaptation, number_of_iterations, initial_sds, model_parameters, static_parameters, fitted_yn, rainfall, obsData, mortality_density_function, rainfall_relationship, rainfall_effect, decline_type, sampling_point, offset_month_vector, sampling_month_vector, likelihood_choice, print_output, calc_inside_mosquito_model, all_output)
 }
 

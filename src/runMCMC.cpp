@@ -67,7 +67,8 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
                              Rcpp::StringVector sampling_month_vector, // Months in which sampling took place
                              Rcpp::String likelihood_choice, // Negative binomial or Poisson likelihood
                              int print_output,  // WHehter or not to print out key diagnostics whilst running
-                             Rcpp::String calc_inside_mosquito_model) {  // For exponential weighting relationship, where to calculate the exponential weighting factors
+                             Rcpp::String calc_inside_mosquito_model, // For exponential weighting relationship, where to calculate the exponential weighting factors
+                             int all_output) {
 
   /////////////////////////////////////////////////////////////////////////////////
   //                                                                             //
@@ -92,12 +93,14 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
   Rcpp::NumericVector post_adapt_acceptance_ratio_tracker(number_of_iterations + 1); // Stores acceptance ratio at each point following starting adaptation
   Rcpp::NumericVector total_acceptance_ratio_tracker(number_of_iterations + 1); // Tracks the overall acceptance ratio at each point
   Rcpp::NumericVector accepted_status_checker(number_of_iterations + 1); // Tracks whether each proposal was rejected or not
+  Rcpp::NumericVector scaling_factor_storage(number_of_iterations + 1);
   double current_acceptance_ratio = 0; // Tracks current acceptance ratio
   double acceptances = 0; // Tracks number of acceptances
   double rejections = 0; // Tracks number of rejections
   int cov_fail_counter = 0; // Counter to track number of times covariance matrix cannot be Cholesky decomposed
   double acceptances_adapt_only = 0; // Tracks number of acceptances since beginning adaptation
   Rcpp::NumericMatrix latest_parameter_values_output(number_of_iterations + 1, Rcpp::sum(fitted_yn)); // compare to MCMC chans to make sure right stuff is being put in
+  Rcpp::List covariance_matrix_storage(number_of_iterations + 1);
 
   // Generates an indexer from which to access fitted parameters from full parameters vector, fills the names vector with
   // parameters that are to be fitted, and fills the first row of the MCMC output
@@ -119,21 +122,21 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
   // Defining variables involved in the Adaptive MCMC part
   double current_scaling_factor = 1;
   arma::mat current_mu(1, Rcpp::sum(fitted_yn)); // initialised later on with the MCMC chain values at the iteration number when adaptation starts
-  arma::mat current_covariance_matrix(Rcpp::sum(fitted_yn), Rcpp::sum(fitted_yn)); // fills the covariance matrix diagonalswith the sds vector
+  arma::mat correlation_matrix(Rcpp::sum(fitted_yn), Rcpp::sum(fitted_yn)); // fills the covariance matrix diagonalswith the sds vector
   for (int x = 0; x < Rcpp::sum(fitted_yn); x++) {                                 // for those parameters that are being fitted
     int index = indexer[x];
     for (int y = 0; y < Rcpp::sum(fitted_yn); y++) {
       if (y == x) {
-        current_covariance_matrix(x, y) = initial_sds[index];
+        correlation_matrix(x, y) = initial_sds[index];
       }
       else {
-        current_covariance_matrix(x, y) = 0;
+        correlation_matrix(x, y) = 0;
       }
     }
   }
   double accepted_variable; // tracks whether most recent parameters were accepted or rejected
   double cooldown; // The cooldown factor in the covariance matrix adaptation algorithm
-  arma::mat initial_covariance_matrix_checker = current_covariance_matrix; // checks the covariance matrix is being initialised properly
+  arma::mat initial_covariance_matrix_checker = correlation_matrix; // checks the covariance matrix is being initialised properly
 
   // Calculating the Posterior Density for the Initial Parameter Values
   double current_posterior_likelihood = posterior(N, obsData,
@@ -175,9 +178,15 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
   // rejects these values based upon the ratio of the Posterior Density for the current and proposed parameter values. The
   // next row of the MCMC chain is then filled with either the proposed values, or the current values, depending on whether the
   // proposed values were accepted or rejected.
+  arma::mat current_covariance_matrix = current_scaling_factor * correlation_matrix;
 
   // Running the MCMC number_of_iterations times
   for (int i = 0; i < number_of_iterations; i++) {
+
+    covariance_matrix_storage[i] = current_covariance_matrix;
+
+    //Rcpp::Rcout << "beginning current covariance matrix is: " << std::endl; // prints relevant output if required
+    //Rcpp::Rcout << current_covariance_matrix << std::endl; // prints relevant output if required
 
     // Checking whether any of the covariance matrix eigenvalues are < 0 and hence the Cholesky Decomposition will fail
     arma::vec eigenvalues = arma::eig_sym(current_covariance_matrix);
@@ -192,14 +201,24 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
     for (int u = 0; u < Rcpp::sum(fitted_yn); u++) {
       current_parameter_values(0, u) = MCMC_chain_output(i, u); // Note: current_parameter_values needs to be a row vector
     }
-    //Rcpp::Rcout << "The iteration number is " << i << std::endl;
-    //Rcpp::Rcout << "The current parameter values are" << current_parameter_values << std::endl;
-    //Rcpp::Rcout << "The current covariance matrix is " << current_covariance_matrix << std::endl;
-    //Rcpp::Rcout << "The current lowest eigenvalue is " << eigenvalues.min() << std::endl;
-    //Rcpp::Rcout << "The number of failures so far is" << cov_fail_counter << std::endl;
     arma::mat transposed_current_parameter_values = current_parameter_values.t(); // mvrnormArma now needs a column vector, so tranpose require
-    arma::mat proposed_parameter_values = mvrnormArma(transposed_current_parameter_values, current_covariance_matrix);
-    //Rcpp::Rcout << "I've actually made it past the MVN call- weird!" << std::endl;
+
+    // NOTE THAT CURRENTLY IF THE MATRIX IS AUGMENTED WITHIN MVRNORMARMA FUNCTION, ADAPTATION IS STILL CARRIED OUT ON THE CURRENT_COVARIANCE_MATRIX
+    // MIGHT NEED TO INVESTIGATE WHETHER ACTUALLY THE ADAPTATION NEEDS TO BE CARRIED OUT ON THE AUGMENTED MATRIX.
+    // IN THAT CASE, WOULD NEED TO BE RETURNING BOTH THE PROPOSED_PARAMETER_VALUES !!!AND!!! THE AUGMENTED MATRIX.
+    //Rcpp::Rcout << "pre mvn covariance matrix is: " << std::endl; // prints relevant output if required
+    //Rcpp::Rcout << current_covariance_matrix << std::endl; // prints relevant output if required
+
+    Rcpp::List mvn_sampler_output = mvrnormArma(transposed_current_parameter_values, current_covariance_matrix);
+    arma::mat proposed_parameter_values = mvn_sampler_output["MVN_Samples"];
+
+    //Rcpp::Rcout << "proposed_parameter_values are: " << proposed_parameter_values << std::endl; // prints relevant output if required
+
+    arma::mat temp_actual_covariance_matrix = mvn_sampler_output["Covariance_Matrix"];
+    current_covariance_matrix = temp_actual_covariance_matrix;
+
+    //Rcpp::Rcout << "current covariance matrix is: " << std::endl; // prints relevant output if required
+    //Rcpp::Rcout << current_covariance_matrix << std::endl; // prints relevant output if required
 
     // Filling the Parameter Vector with the Output from the Proposal Function. Fixed Parameters Remain Unchanged.
     for (int k = 0; k < indexer.size(); k++) {
@@ -271,6 +290,7 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
                                                      sampling_point, offset_month_vector, sampling_month_vector,
                                                      likelihood_choice, calc_inside_mosquito_model);
     double likelihood_ratio = exp(proposed_posterior_likelihood - current_posterior_likelihood);
+    //Rcpp::Rcout << "likelihood_ratio is: " << likelihood_ratio << std::endl; // prints relevant output if required
 
     // If accepted, add the proposed parameters to the next row of the MCMC chain
     if(R::runif(0, 1) < likelihood_ratio) {
@@ -331,7 +351,7 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
         }
         // arma::mat initial_mu_checker = current_mu; Was used in checking the adaptation algorithm
         if (print_output == 1) {
-          Rcpp::Rcout << "Success- current mu at time of adaptation is " << current_mu << std::endl; // prints relevant output if required
+          //Rcpp::Rcout << "Success- current mu at time of adaptation is " << current_mu << std::endl; // prints relevant output if required
         }
       }
       // Considered using current_parameter_values here but that isn't updated (if the proposed values are accepted)
@@ -351,24 +371,39 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
       }
 
       // Adaptation and Alteration of the Covariance Matrix and Related Variables
+      // Rcpp::Rcout << "Current Covariance BEFORE ADAPTATION ALGORITHM IS: " << std::endl;
+      // Rcpp::Rcout << current_covariance_matrix << std::endl;
+      Rcpp::Rcout << "PASSING THE CORRELATION MATRIX" << std::endl;
       Rcpp::List adapter_output = proposal_SD_adapter(accepted_variable, i, start_sd_adaptation,
                                                       current_scaling_factor, current_mu, latest_parameter_values, // technically parameter values for t + 1 as the acceptance/rejection step precedes calling this function
-                                                      current_covariance_matrix);
+                                                      correlation_matrix);
 
       Rcpp::NumericVector new_mu = adapter_output["New_Mu"]; // adapter_outputs's new_mu, which is then assigned to current_mu
       for (int u = 0; u < Rcpp::sum(fitted_yn); u++) {
         current_mu[u] = new_mu[u];
       }
-      Rcpp::NumericMatrix new_covariance_matrix = adapter_output["New_Covariance_Matrix"]; // adapter_output's new covariance matrix, which is assigned to be the current covariance matrix
+
+
+      cooldown = adapter_output["Cooldown"];
+      current_scaling_factor = adapter_output["New_Scaling_Factor"]; // required for the next iteraton when proposal_SD_adapter is called again
+      // Rcpp::Rcout << "Current SCALING FACTOR WHICH SHOULD MATCH ADAPTATION ALGORITHM OUTPUT IS: " << std::endl;
+      // Rcpp::Rcout << current_scaling_factor << std::endl;
+
+
+      scaling_factor_storage[i - start_sd_adaptation] = current_scaling_factor;
+      Rcpp::NumericMatrix correlation_matrix = adapter_output["New_Correlation_Matrix"]; // adapter_output's new covariance matrix, which is assigned to be the current covariance matrix
+      // Rcpp::Rcout << "Current CORRELATION WHICH SHOULD MATCH ADAPTATION ALGORITHM OUTPUT IS: " << std::endl;
+      // Rcpp::Rcout << new_correlation_matrix << std::endl;
+
+      Rcpp::NumericMatrix new_covariance_matrix = correlation_matrix * current_scaling_factor;
+
       for (int u = 0; u < current_parameter_values.size(); u++) {
         for (int v = 0; v < current_parameter_values.size(); v++) {
           current_covariance_matrix(u, v) = new_covariance_matrix(u, v);
         }
       }
-      cooldown = adapter_output["Cooldown"]; // reqired for the next iteration when proposal_SD_adapter is called again
-      current_scaling_factor = adapter_output["New_Scaling_Factor"]; // required for the next iteraton when proposal_SD_adapter is called again
-
     }
+
 
     //////////////////////////////////////////////////////////////////////
     //                                                                  //
@@ -376,18 +411,22 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
     //                                                                  //
     //////////////////////////////////////////////////////////////////////
 
+    // Rcpp::Rcout << "The iteration number is " << i << std::endl;
     if (print_output == 1) {
-      if (i == 1 | i == 2 | i == 3 | i == 4 | i == 5 | i == 6 | i == 7 | i == 8 | i == 9 | i == 10 | i % 100 == 0) {
-        Rcpp::Rcout << current_covariance_matrix << "This is the covariance matrix" << std::endl;
-        Rcpp::Rcout << "The overall acceptance ratio is " << current_acceptance_ratio << std::endl;
+      if (i <= all_output | i % 100 == 0) {
         Rcpp::Rcout << "The iteration number is " << i << std::endl;
+        Rcpp::Rcout << "The ACCEPTED VARIABLE value is: " << accepted_variable << std::endl;
+        Rcpp::Rcout << "This is the covariance matrix: " <<  std::endl;
+        Rcpp::Rcout << current_covariance_matrix <<  std::endl;
+        Rcpp::Rcout << " " << std::endl;
+        Rcpp::Rcout << "The overall acceptance ratio is " << current_acceptance_ratio << std::endl;
         if (i > start_sd_adaptation & i < end_sd_adaptation) {
-          Rcpp::Rcout << "The current scaling factor is " << current_scaling_factor << std::endl;
-          Rcpp::Rcout << "The current mu is " << current_mu << std::endl;
-          Rcpp::Rcout << "The cooldown factor is " << cooldown << std::endl;
           Rcpp::Rcout << "The acceptance ratio since starting to adapt is " << post_adapt_acceptance_ratio_tracker[i] << "\n" << std::endl;
-          Rcpp::Rcout << "Number of cholesky failuress is " << cov_fail_counter << std::endl;
-          Rcpp::Rcout << "The iteration number is " << i << std::endl;
+          Rcpp::Rcout << "The current scaling factor is " << current_scaling_factor << std::endl;
+          // Rcpp::Rcout << "The current mu is " << current_mu << std::endl;
+          Rcpp::Rcout << "The cooldown factor is " << cooldown << std::endl;
+          Rcpp::Rcout << "Number of cholesky failures is " << cov_fail_counter << std::endl;
+          Rcpp::Rcout << " " << std::endl;
         }
         else {
           Rcpp::Rcout << "\n " << std::endl;
@@ -407,6 +446,9 @@ Rcpp::List run_particle_MCMC(int N, // Number of particles,
                             Rcpp::Named("Mu_Output") = latest_parameter_values_output,
                             Rcpp::Named("Iteration of Cholesky Failures") = cholesky_decomp_failures,
                             Rcpp::Named("Covariance Failures") = covariance_matrix_failures,
-                            Rcpp::Named("Number of Chol Failures") = cov_fail_counter));
+                            Rcpp::Named("Number of Chol Failures") = cov_fail_counter,
+                            Rcpp::Named("Covariance_Matrices") = covariance_matrix_storage,
+                            Rcpp::Named("Scaling_Factors") = scaling_factor_storage,
+                            Rcpp::Named("latest_parameter_values_output") = latest_parameter_values_output));
 }
 

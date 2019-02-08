@@ -69,7 +69,7 @@ double prior(Rcpp::NumericVector parameter_values, Rcpp::LogicalVector fitted_yn
     res = res + R::dnorm4(parameter_values["muM"], 0.096, 0.00459, TRUE); //muM - Michael's Posterior
   }
   if (fitted_yn["lambda"]) {
-    res = res + R::dnorm4(parameter_values["lambda"], 13.25, 5, TRUE); //lambda - NOT Michael's Posterior
+    res = res + R::dnorm4(parameter_values["lambda"], 13.25, 7, TRUE); //lambda - NOT Michael's Posterior
   }
   if (fitted_yn["beta"]) {
     res = res + R::dnorm4(parameter_values["beta"], 21.19, 4.9082, TRUE); //beta - Michael's Posterior
@@ -84,10 +84,10 @@ double prior(Rcpp::NumericVector parameter_values, Rcpp::LogicalVector fitted_yn
     res = res + R::dunif(parameter_values["z"], 1, 10000, TRUE); //pop_frac BETA DISTRIBUTION USED BASED ON MRR DATA
   }
   if (fitted_yn["tau_rainfall"]) {
-    res = res + R::dnorm4(parameter_values["tau_rainfall"], 4, 0.7653, TRUE); // CONSIDER CHANGING THIS
+    res = res + R::dnorm4(parameter_values["tau_rainfall"], 15, 15, TRUE); // CONSIDER CHANGING THIS
   }
   if (fitted_yn["scaling_factor_rainfall"]) {
-    res = res + R::dunif(parameter_values["scaling_factor_rainfall"], 1, 500, TRUE); //pop_frac BETA DISTRIBUTION USED BASED ON MRR DATA
+    res = res + R::dunif(parameter_values["scaling_factor_rainfall"], 1, 2000, TRUE); //pop_frac BETA DISTRIBUTION USED BASED ON MRR DATA
   }
   if (fitted_yn["K_Max_Hill_Rainfall"]) {
     res = res + R::dunif(parameter_values["K_Max_Hill_Rainfall"], 1, 500, TRUE); //pop_frac BETA DISTRIBUTION USED BASED ON MRR DATA
@@ -186,13 +186,39 @@ Rcpp::List proposal_SD_adapter(double accepted_variable, double current_iteratio
   double iterations_since_cooling_began = current_iteration - iteration_cooling_began;
   double cooldown = pow((iterations_since_cooling_began + 1), -0.6);
 
-  arma::mat new_correlation_matrix = ((1 - cooldown) * current_covariance_matrix) + (cooldown * (((current_parameter_values - mu_previous).t()) * (current_parameter_values - mu_previous)));
-  arma::mat new_mu = ((1 - cooldown) * mu_previous) + (cooldown * current_parameter_values);
-  double log_new_scaling_factor = log(current_scaling_factor) + cooldown * (accepted_variable - 0.25);
-  double new_scaling_factor = exp(log_new_scaling_factor);
-  arma::mat new_covariance_matrix = new_scaling_factor * new_correlation_matrix;
+  // Rcpp::Rcout << "NEW ITERATION" << std::endl;
+  // Rcpp::Rcout << " " << std::endl;
+  // Rcpp::Rcout << "DIFFERENCE BETWEEN PARAMETERS AND MU IS: " << std::endl;
+  // Rcpp::Rcout << current_parameter_values - mu_previous << std::endl;
+  // Rcpp::Rcout << "SQUARED DIFFERENCE MATRIX BETWEEN PARAMETERS AND MU IS: " << std::endl;
+  // Rcpp::Rcout << ((current_parameter_values - mu_previous).t()) * (current_parameter_values - mu_previous) << std::endl;
+  // Rcpp::Rcout << "COOLDOWN IS: " << std::endl;
+  // Rcpp::Rcout << cooldown << std::endl;
+  // Rcpp::Rcout << "COOLDOWN ADJUSTED MATRIX 4 Real IS: " << std::endl;
+  // Rcpp::Rcout << (cooldown * (((current_parameter_values - mu_previous).t()) * (current_parameter_values - mu_previous))) << std::endl;
+  // Rcpp::Rcout << "CURRENT COVARIANCE MATRIX PRE COOLDOWN IS: " << std::endl;
+  // Rcpp::Rcout <<  current_covariance_matrix << std::endl;
+  // Rcpp::Rcout << "CURRENT COVARIANCE MATRIX POST COOLDOWN IS: " << std::endl;
+  // Rcpp::Rcout <<  ((1 - cooldown) * current_covariance_matrix) << std::endl;
 
-  return(Rcpp::List::create(Rcpp::Named("New_Covariance_Matrix") = new_covariance_matrix,
+  arma::mat new_correlation_matrix = ((1 - cooldown) * current_covariance_matrix) + (cooldown * (((current_parameter_values - mu_previous).t()) * (current_parameter_values - mu_previous)));
+  //Rcpp::Rcout << "NEW CORRELATION MATRIX IS: " << std::endl;
+  //Rcpp::Rcout << new_correlation_matrix << std::endl;
+
+
+  arma::mat new_mu = ((1 - cooldown) * mu_previous) + (cooldown * current_parameter_values);
+
+  double log_new_scaling_factor = log(current_scaling_factor) + cooldown * (accepted_variable - 0.25);
+
+  double new_scaling_factor = exp(log_new_scaling_factor);
+  //Rcpp::Rcout << "NEW SCALING FACTOR IS: " << new_scaling_factor << std::endl;
+  //Rcpp::Rcout << "NEW COVARIANCE MATRIX IS: " << std::endl;
+  //Rcpp::Rcout << new_scaling_factor * new_correlation_matrix << std::endl;
+
+
+  // arma::mat new_covariance_matrix = new_scaling_factor * new_correlation_matrix;
+
+  return(Rcpp::List::create(Rcpp::Named("New_Correlation_Matrix") = new_correlation_matrix,
                             Rcpp::Named("New_Mu") = new_mu,
                             Rcpp::Named("New_Scaling_Factor") = new_scaling_factor,
                             Rcpp::Named("Cooldown") = cooldown));
@@ -200,13 +226,11 @@ Rcpp::List proposal_SD_adapter(double accepted_variable, double current_iteratio
 }
 
 // [[Rcpp::export]]
-arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
+Rcpp::List mvrnormArma(arma::mat mu, arma::mat sigma) {
 
   // Initialising variables required for the Cholesky Decomposition
   int ncols = sigma.n_cols;
   arma::mat Y = arma::randn(ncols, 1); // ncols x 1 matrix (column vector basically)
-
-  //Rcpp::Rcout << "The column vector of normals is " << Y << std::endl;
 
   // Checking whether sigma has negative eigenvalues (hence precluding Cholesky Decompisition which
   // requires taking the inverse) - if it does, I do the following things:
@@ -230,22 +254,7 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
   //                                                                 //
   /////////////////////////////////////////////////////////////////////
 
-  // Detecting whether any of the eigenvalues are very small
-  int small_eigenvalue_detector = 0;
-  for (int i = 0; i < ncols; i++) {
-    if (eigenvalues_calc[i] <= 1e-12 & eigenvalues_calc[i] >= -1e-12) { // changed to -6 so I can use the matrix I'm using to test, but in the blog post they set it to 1e-12
-      small_eigenvalue_detector = 1;
-    }
-  }
-
-  // If the eigenvalues are very small, changing them to 0 and then do the eigendecomposition
-  if (small_eigenvalue_detector == 1) {
-    for (int i = 0; i < ncols; i++) {
-      if (eigenvalues_calc[i] <= 1e-12 & eigenvalues_calc[i] >= -1e-12) { // changed to -6 so I can use the matrix I'm using to test, but in the blog post they set it to 1e-12
-        small_eigenvalue_detector = 1;
-        eigenvalues_calc[i] = 0;
-      }
-    }
+  if (minimum == 0) {
 
     // Create diagional matrix full of zeroes and then fill it with the covariance matrix eigenvalues
     arma::mat eigenvalue_diagonal_matrix = arma::zeros(ncols, ncols); // check that the eigenvalues are added as doubles, not integer
@@ -256,12 +265,15 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
     arma::mat MVN_samples = mu + eigenvalue_decomposition * Y; // mu is ncols x 1, eigenvalue_decomposition is ncols x ncols & Y is ncols x 1
     arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column (ncols x 1), so trapose to create a row (1 x ncols)
 
+    //Rcpp::Rcout << "Eigenvalue 0, Eigendecomposition COMPLETE" << std::endl;
+
     for (int i = 0; i < actual_MVN_samples.size(); i++) {
       if (actual_MVN_samples(0, i) < 0) { // don't want negative numbers so sets any negative proposed numbers to 0
         actual_MVN_samples(0, i) = 0;
       }
     }
-    return(actual_MVN_samples);
+    return(Rcpp::List::create(Rcpp::Named("MVN_Samples") = actual_MVN_samples,
+                              Rcpp::Named("Covariance_Matrix") = sigma));
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -271,8 +283,10 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
   //                                                                       //
   ///////////////////////////////////////////////////////////////////////////
 
-  if (minimum <= 0.0) { // where the matrix does have negative eigenvalues and hence is non-invertible
+  else if (minimum < 0.0) { // where the matrix does have negative eigenvalues and hence is non-invertible
     arma::mat changed_sigma = sigma; // initialising new matrix with sigma's values so that it can be adapted and not alter the original sigma
+
+    //Rcpp::Rcout << "Negative Eigenvalues, Augmenting the Matrix" << std::endl;
 
     for (int i = 0; i < ncols; i++) {
       for (int j = 0; j < ncols; j++) {
@@ -299,6 +313,9 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
     double new_new_minimum = new_new_eigenvalues_calc.min();            // augmented matrix
 
     if (new_new_minimum > 0) {  // implies addition of a small amount has made the matrix invertible now, cholesky possible
+
+      //Rcpp::Rcout << "Fixed, Cholesky Decomposition" << std::endl;
+
       arma::mat MVN_samples = mu + arma::chol(changed_sigma) * Y;  // mu is a ncols x 1 column matrix, cholesky is ncols x ncols, Y is ncols x 1
       arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column, so trapose to create a row
       for (int i = 0; i < actual_MVN_samples.size(); i++) {
@@ -306,10 +323,13 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
           actual_MVN_samples(0, i) = 0;
         }
       }
-      return(actual_MVN_samples);
+      return(Rcpp::List::create(Rcpp::Named("MVN_Samples") = actual_MVN_samples,
+                                Rcpp::Named("Covariance_Matrix") = changed_sigma));
     }
 
     else if (new_new_minimum == 0) { // do an eigendecomposition on the augmented covariance matrix that has lowest eigenvalue 0 now
+
+      //Rcpp::Rcout << "Fixed, Eigendecomposition" << std::endl;
 
       arma::vec zero_eigenvalues_calc;
       arma::mat zero_eigenvectors_calc;
@@ -321,7 +341,7 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
 
       // Perform the eigendecomposition then use it to sample from the MVN
       arma::mat zero_eigenvalue_decomposition = zero_eigenvectors_calc * arma::sqrt(zero_eigenvalue_diagonal_matrix);
-      Rcpp::Rcout << "The eigenvalue decomposition matrix is " << zero_eigenvalue_decomposition << std::endl;
+      //Rcpp::Rcout << "The eigenvalue decomposition matrix is " << zero_eigenvalue_decomposition << std::endl;
       arma::mat MVN_samples = mu + zero_eigenvalue_decomposition * Y;
       arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column, so trapose to create a row
 
@@ -330,7 +350,8 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
           actual_MVN_samples(0, i) = 0;
         }
       }
-      return(actual_MVN_samples);
+      return(Rcpp::List::create(Rcpp::Named("MVN_Samples") = actual_MVN_samples,
+                                Rcpp::Named("Covariance_Matrix") = changed_sigma));
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -342,6 +363,9 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
     ////////////////////////////////////////////////////////////////////////////
 
     else { // augmenting matrix still hasn't worked, eigenvalues still < 0, different approach required
+
+      //Rcpp::Rcout << "Not Fixed, Changed to Zeroes, Eigendecomposition" << std::endl;
+
       for (int i = 0; i < ncols; i++) {
           if (eigenvalues_calc[i] <= 0.0) {
             eigenvalues_calc[i] = 0.01;
@@ -362,7 +386,8 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
           actual_MVN_samples(0, i) = 0;
         }
       }
-      return(actual_MVN_samples);
+      return(Rcpp::List::create(Rcpp::Named("MVN_Samples") = actual_MVN_samples,
+                                Rcpp::Named("Covariance_Matrix") = changed_sigma));
     }
   }
 
@@ -370,12 +395,16 @@ arma::mat mvrnormArma(arma::mat mu, arma::mat sigma) {
   else {
     arma::mat MVN_samples = mu + arma::chol(sigma) * Y;
     arma::mat actual_MVN_samples = MVN_samples.t(); // comes out as column, so trapose to create a row
+
+    //Rcpp::Rcout << "Standard Cholesky Decomposition COMPLETE" << std::endl;
+
     for (int i = 0; i < actual_MVN_samples.size(); i++) {
       if (actual_MVN_samples(0, i) < 0) {
         actual_MVN_samples(0, i) = 0;
       }
     }
-    return(actual_MVN_samples);
+    return(Rcpp::List::create(Rcpp::Named("MVN_Samples") = actual_MVN_samples,
+                              Rcpp::Named("Covariance_Matrix") = sigma));
   }
 }
 
